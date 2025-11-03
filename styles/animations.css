@@ -1,0 +1,281 @@
+/* Animation Keyframes */
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.7;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+@keyframes drawLine {
+    from {
+        stroke-dashoffset: 1000;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes nodeAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0) rotate(180deg);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8) rotate(90deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 53%, 80%, 100% {
+        transform: translate3d(0,0,0);
+    }
+    40%, 43% {
+        transform: translate3d(0, -10px, 0);
+    }
+    70% {
+        transform: translate3d(0, -5px, 0);
+    }
+    90% {
+        transform: translate3d(0, -2px, 0);
+    }
+}
+
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 5px rgba(217, 83, 79, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(217, 83, 79, 0.6);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(217, 83, 79, 0.3);
+    }
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+/* Animation Classes */
+
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-in-right {
+    animation: slideInRight 0.4s ease-out;
+}
+
+.animate-slide-out-right {
+    animation: slideOutRight 0.4s ease-in;
+}
+
+.animate-bounce {
+    animation: bounce 1s;
+}
+
+.animate-glow {
+    animation: glow 2s infinite;
+}
+
+.animate-rotate {
+    animation: rotate 2s linear infinite;
+}
+
+/* Loading animations */
+.loading-progress {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(90deg, #d9534f 0%, #f0ad4e 50%, #d9534f 100%);
+    background-size: 200% 100%;
+}
+
+/* Node-specific animations */
+.node-animate-in {
+    animation: nodeAppear 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.link-animate-in {
+    stroke-dasharray: 1000;
+    animation: drawLine 1s ease-out forwards;
+}
+
+/* Hover animations */
+.node:hover {
+    animation: bounce 0.6s;
+}
+
+.control-btn:hover {
+    animation: pulse 0.3s;
+}
+
+/* Interactive animations */
+.mindmap-container.panning {
+    cursor: grabbing;
+}
+
+.zoom-btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+}
+
+/* Detail panel animations */
+.detail-panel.opening {
+    animation: slideInRight 0.4s ease-out;
+}
+
+.detail-panel.closing {
+    animation: slideOutRight 0.4s ease-in;
+}
+
+/* Modal animations */
+.modal.show .modal-content {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Staggered animations for multiple elements */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+.stagger-6 { animation-delay: 0.6s; }
+.stagger-7 { animation-delay: 0.7s; }
+.stagger-8 { animation-delay: 0.8s; }
+
+/* Transition classes */
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.transition-transform {
+    transition: transform 0.2s ease;
+}
+
+.transition-opacity {
+    transition: opacity 0.3s ease;
+}
+
+.transition-colors {
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Performance optimizations */
+.gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus animations for accessibility */
+.control-btn:focus,
+.zoom-btn:focus,
+.close-btn:focus {
+    outline: 2px solid #d9534f;
+    outline-offset: 2px;
+    animation: glow 1s infinite;
+}
+
+/* Loading screen exit animation */
+.loading-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+/* Mindmap entrance sequence */
+.mindmap-entrance .node {
+    opacity: 0;
+    transform: scale(0);
+}
+
+.mindmap-entrance .link {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+}
+
+.mindmap-ready .node {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.mindmap-ready .link {
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s ease;
+}
