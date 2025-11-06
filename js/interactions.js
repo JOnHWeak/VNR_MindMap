@@ -24,11 +24,7 @@ class MindmapInteractions {
             this.mindmap.zoomOut();
         });
 
-        // Reset view
-        document.getElementById('reset-view').addEventListener('click', () => {
-            this.mindmap.resetView();
-            this.mindmap.deselectAll();
-        });
+
 
         // Fullscreen toggle
         document.getElementById('fullscreen-btn').addEventListener('click', () => {
