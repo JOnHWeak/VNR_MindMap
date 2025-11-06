@@ -5,14 +5,26 @@ class VietnamCommunistPartyHistoryApp {
         this.interactions = null;
         this.animations = null;
         this.isLoaded = false;
-        
+
         this.init();
     }
 
     async init() {
         // Show loading screen
+    // Lọc đệ quy để loại bỏ các node không hợp lệ (ví dụ: do dấu phẩy thừa)
+    function filterInvalidNodes(node) {
+        if (!node) return false;
+        if (node.children) {
+            node.children = node.children.filter(filterInvalidNodes);
+        }
+        return true; // Giữ lại node hợp lệ
+    }
+
+    // Lọc dữ liệu trước khi khởi tạo mindmap
+    filterInvalidNodes(mindmapData);
+
         this.showLoadingScreen();
-        
+
         // Wait for DOM to be ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.startApp());
@@ -32,14 +44,14 @@ class VietnamCommunistPartyHistoryApp {
         try {
             // Initialize animations controller first
             this.animations = new MindmapAnimations(null);
-            
+
             // Start loading animation and wait for it to finish
             this.animations.animateLoading();
             await this.animations.hideLoadingScreen();
 
             // Load additional data if needed
             await this.loadAdditionalData();
-            
+
             // Initialize mindmap
             await this.initializeMindmap();
 
@@ -48,15 +60,15 @@ class VietnamCommunistPartyHistoryApp {
 
             // Initialize interactions
             this.initializeInteractions();
-            
+
             // Setup additional features
             this.setupAdditionalFeatures();
-            
+
             // Mark as loaded
             this.isLoaded = true;
-            
+
             console.log('Vietnamese Communist Party History Mindmap loaded successfully!');
-            
+
         } catch (error) {
             console.error('Error initializing app:', error);
             this.showErrorMessage('Có lỗi xảy ra khi tải ứng dụng. Vui lòng thử lại.');
@@ -88,10 +100,10 @@ class VietnamCommunistPartyHistoryApp {
     async initializeMindmap() {
         // Initialize the mindmap with the container and data
         this.mindmap = new VietnameseCommunistPartyMindmap('#mindmap-container', mindmapData);
-        
+
         // Update animations reference
         this.animations.mindmap = this.mindmap;
-        
+
         // Wait for mindmap to be ready
         await new Promise(resolve => setTimeout(resolve, 500));
     }
@@ -99,12 +111,12 @@ class VietnamCommunistPartyHistoryApp {
     initializeInteractions() {
         // Initialize interaction handlers
         this.interactions = new MindmapInteractions(this.mindmap);
-        
+
         // Setup additional interaction features
                 if (this.interactions.constructor.utils.isTouch()) {
             this.interactions.setupTouchInteractions();
         }
-        
+
         this.interactions.setupAccessibility();
         this.interactions.setupExport();
     }
@@ -112,13 +124,13 @@ class VietnamCommunistPartyHistoryApp {
     setupAdditionalFeatures() {
         // Setup search functionality
         this.interactions.setupSearch();
-        
+
         // Setup performance monitoring
         this.setupPerformanceMonitoring();
-        
+
         // Setup error handling
         this.setupErrorHandling();
-        
+
         // Setup analytics (if needed)
         this.setupAnalytics();
     }
@@ -127,26 +139,26 @@ class VietnamCommunistPartyHistoryApp {
         // Monitor performance and optimize if needed
         let frameCount = 0;
         let lastTime = performance.now();
-        
+
         const checkPerformance = () => {
             frameCount++;
             const currentTime = performance.now();
-            
+
             if (currentTime - lastTime >= 1000) {
                 const fps = frameCount;
                 frameCount = 0;
                 lastTime = currentTime;
-                
+
                 // If FPS is too low, reduce animations
                 if (fps < 30) {
                     this.animations.pauseAnimations();
                     console.warn('Low FPS detected, reducing animations');
                 }
             }
-            
+
             requestAnimationFrame(checkPerformance);
         };
-        
+
         requestAnimationFrame(checkPerformance);
     }
 
@@ -155,7 +167,7 @@ class VietnamCommunistPartyHistoryApp {
             console.error('Application error:', event.error);
             this.showErrorMessage('Đã xảy ra lỗi. Vui lòng tải lại trang.');
         });
-        
+
         window.addEventListener('unhandledrejection', (event) => {
             console.error('Unhandled promise rejection:', event.reason);
             this.showErrorMessage('Đã xảy ra lỗi khi tải dữ liệu.');
@@ -184,9 +196,9 @@ class VietnamCommunistPartyHistoryApp {
                 </button>
             </div>
         `;
-        
+
         document.body.appendChild(errorDiv);
-        
+
         // Auto remove after 5 seconds
         setTimeout(() => {
             if (errorDiv.parentElement) {
@@ -202,7 +214,7 @@ class VietnamCommunistPartyHistoryApp {
 
     selectNode(nodeId) {
         if (!this.mindmap) return false;
-        
+
         // Find node by ID and select it
         const node = this.findNodeById(nodeId);
         if (node) {
@@ -214,13 +226,13 @@ class VietnamCommunistPartyHistoryApp {
 
     findNodeById(nodeId) {
         let foundNode = null;
-        
+
         this.mindmap.nodeGroup?.each(function(d) {
             if (d.data.id === nodeId) {
                 foundNode = d;
             }
         });
-        
+
         return foundNode;
     }
 
@@ -239,11 +251,11 @@ class VietnamCommunistPartyHistoryApp {
             this.mindmap.svg.remove();
             this.mindmap.tooltip.remove();
         }
-        
+
         // Remove event listeners
         window.removeEventListener('resize', this.handleResize);
         document.removeEventListener('keydown', this.handleKeydown);
-        
+
         this.isLoaded = false;
     }
 }
