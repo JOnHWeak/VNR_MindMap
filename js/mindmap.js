@@ -194,26 +194,28 @@ class VietnameseCommunistPartyMindmap {
         .style("pointer-events", "none")
         .style("text-anchor", "middle");
   
-      // icon (nếu có)
-      enter
-        .filter((d) => d.data.icon)
-        .append("text")
-        .attr("class", (d) => `node-icon ${d.data.type}`)
-        .attr("dy", (d) => (d.data.type === "central" ? "-0.5em" : "-0.3em"))
-        .style("font-family", "Font Awesome 6 Free")
-        .style("font-weight", "900")
-        .text((d) => this.getIconText(d.data.icon))
-        .style("pointer-events", "none");
+
   
       this.nodeGroup = enter.merge(this.nodeGroup);
     }
   
     /* ====================== HELPERS (SIZE/TEXT/CLASS) ====================== */
     getNodeClass(d) {
-      if (d.data.type === "central") return "node-central";
-      if (d.data.type === "period") return `node-period-${d.data.period.split("-")[0]}`;
-      if (d.data.type === "sub") return `node-sub period-${d.data.period.split("-")[0]}`;
-      if (d.data.type === "event") return `node-event period-${d.data.period.split("-")[0]}`;
+      const type = d.data.type;
+      let periodClass = "";
+      if (d.data.period) {
+        const startYear = parseInt(d.data.period.split("-")[0], 10);
+        if (startYear >= 1975) {
+          periodClass = "period-1975";
+        } else {
+          periodClass = `period-${startYear}`;
+        }
+      }
+
+      if (type === "central") return "node-central";
+      if (type === "period") return `node-period-${d.data.period.split("-")[0]}`;
+      if (type === "sub") return `node-sub ${periodClass}`;
+      if (type === "event") return `node-event ${periodClass}`;
       return "node-default";
     }
   
@@ -273,35 +275,16 @@ class VietnameseCommunistPartyMindmap {
       }
     }
   
-    getNodeText(d) {
+        getNodeText(d) {
+      if (!d.data.name) {
+        return ''; // Return an empty string if name is missing
+      }
       if (d.data.type === "central") return d.data.name;
       const limit = d.data.type === "period" ? 28 : 22;
       return d.data.name.length > limit ? d.data.name.slice(0, limit) + "..." : d.data.name;
     }
   
-    getIconText(iconClass) {
-      const iconMap = {
-        "fas fa-star": "\uf005",
-        "fas fa-flag": "\uf024",
-        "fas fa-globe": "\uf0ac",
-        "fas fa-user": "\uf007",
-        "fas fa-handshake": "\uf2b5",
-        "fas fa-scroll": "\uf70e",
-        "fas fa-fist-raised": "\uf6de",
-        "fas fa-hammer-sickle": "\uf6e3",
-        "fas fa-vote-yea": "\uf772",
-        "fas fa-shield-alt": "\uf3ed",
-        "fas fa-sword": "\uf71c",
-        "fas fa-shield": "\uf132",
-        "fas fa-mountain": "\uf6fc",
-        "fas fa-trophy": "\uf091",
-        "fas fa-rocket": "\uf135",
-        "fas fa-book": "\uf02d",
-        "fas fa-question-circle": "\uf059",
-        "fas fa-chart-line": "\uf201",
-      };
-      return iconMap[iconClass] || "\uf005";
-    }
+
   
     /* ====================== PATHS & ANIMATIONS ====================== */
     createLinkPath(d) {
@@ -323,7 +306,7 @@ class VietnameseCommunistPartyMindmap {
     animateEntrance() {
       this.nodeGroup
         .transition()
-        .delay((d, i) => i * 60)
+        .delay((_, i) => i * 60)
         .duration(600)
         .style("opacity", 1)
         .attr("transform", (d) => {
@@ -334,7 +317,7 @@ class VietnameseCommunistPartyMindmap {
       this.linkGroup
         .selectAll(".link")
         .transition()
-        .delay((d, i) => i * 40 + 150)
+        .delay((_, i) => i * 40 + 150)
         .duration(800)
         .style("stroke-dashoffset", "0");
     }
