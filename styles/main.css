@@ -12,11 +12,10 @@ body {
 
 /* Header Styles */
 .header {
-    background-color: #fff;
-    border-bottom: 1px solid #dee2e6;
+    background-color: #e10800; /* Red background */
     padding: 10px 20px;
     z-index: 1000;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .header-content {
@@ -30,28 +29,28 @@ body {
 .main-title {
     font-size: 1.5rem;
     font-weight: 600;
-    color: #d9534f; /* Red color associated with the flag */
+    color: #fff; /* White text */
     display: flex;
     align-items: center;
 }
 
 .main-title .fa-star {
     margin-right: 10px;
-    color: #f0ad4e; /* Gold star */
+    color: #fcbd01; /* White star */
 }
 
 .header-controls .control-btn {
     background: none;
     border: none;
     font-size: 1.2rem;
-    color: #555;
+    color: #fff; /* White icons */
     cursor: pointer;
     margin-left: 15px;
     transition: color 0.2s;
 }
 
 .header-controls .control-btn:hover {
-    color: #d9534f;
+    color: #f8d7da; /* Light red on hover */
 }
 
 /* Main Container */

@@ -4,7 +4,7 @@
   "description": "Interactive mindmap for Vietnamese Communist Party History",
   "main": "index.html",
   "scripts": {
-    "dev": "live-server --port=3000 --open=/index.html",
+    "dev": "live-server --port=3000 --open=/intro.html",
     "start": "live-server --port=8080 --open=/index.html",
     "build": "echo 'Building static files...' && npm run minify",
     "minify": "npm run minify-css && npm run minify-js",

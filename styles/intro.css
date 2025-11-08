@@ -1,0 +1,45 @@
+/* styles/intro.css */
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: #d9534f; /* Red background */
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.intro-container {
+    text-align: center;
+}
+
+.intro-content h1, .intro-content h2 {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+.welcome-text {
+    font-size: 2rem;
+    font-weight: 500;
+    animation: fadeIn-up 1.2s 0.5s forwards ease-out;
+}
+
+.main-title-intro {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-top: 10px;
+    animation: fadeIn-up 1.2s 1s forwards ease-out;
+}
+
+@keyframes fadeIn-up {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
