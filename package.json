@@ -4,8 +4,8 @@
   "description": "Interactive mindmap for Vietnamese Communist Party History",
   "main": "index.html",
   "scripts": {
-    "dev": "live-server --port=3000 --open=/intro.html",
-    "start": "live-server --port=8080 --open=/index.html",
+    "dev": "live-server --port=3000 --open=/index.html",
+    "start": "live-server --port=8080 --open=/main.html",
     "build": "npm run clean && npm run mkdirs && npm run copy-html && npm run minify",
     "clean": "rimraf dist",
     "mkdirs": "mkdirp dist/styles dist/js",
@@ -19,7 +19,7 @@
     "test": "echo 'No tests specified'",
     "lint": "eslint js/*.js",
     "format": "prettier --write *.html js/*.js styles/*.css",
-    "postbuild": "node -e \"require('replace-in-file').sync({ files: 'dist/index.html', from: [/    <link rel=\\\"stylesheet\\\" href=\\\"styles\\/main.css\\\">\\n    <link rel=\\\"stylesheet\\\" href=\\\"styles\\/mindmap.css\\\">\\n    <link rel=\\\"stylesheet\\\" href=\\\"styles\\/animations.css\\\">/g, /<script src=\\\"https\\:\\/\\/d3js.org\\/d3.v7.min.js\\\"><\\/script>\\n    <script src=\\\"js\\/data.js\\\"><\\/script>\\n    <script src=\\\"js\\/mindmap.js\\\"><\\/script>\\n    <script src=\\\"js\\/interactions.js\\\"><\\/script>\\n    <script src=\\\"js\\/animations.js\\\"><\\/script>\\n    <script src=\\\"js\\/main.js\\\"><\\/script>/g], to: ['    <link rel=\\\"stylesheet\\\" href=\\\"styles\\/main.min.css\\\">', '<script src=\\\"js\\/app.min.js\\\"><\\/script>'] }); require('replace-in-file').sync({ files: 'dist/intro.html', from: [/styles\\/intro.css/g, /js\\/intro.js/g], to: ['styles/intro.min.css', 'js/intro.min.js'] });\""
+    "postbuild": "node -e \"require('replace-in-file').sync({ files: 'dist/main.html', from: [/    <link rel=\\\"stylesheet\\\" href=\\\"styles\\/main.css\\\">\\n    <link rel=\\\"stylesheet\\\" href=\\\"styles\\/mindmap.css\\\">\\n    <link rel=\\\"stylesheet\\\" href=\\\"styles\\/animations.css\\\">/g, /<script src=\\\"https\\:\\/\\/d3js.org\\/d3.v7.min.js\\\"><\\/script>\\n    <script src=\\\"js\\/data.js\\\"><\\/script>\\n    <script src=\\\"js\\/mindmap.js\\\"><\\/script>\\n    <script src=\\\"js\\/interactions.js\\\"><\\/script>\\n    <script src=\\\"js\\/animations.js\\\"><\\/script>\\n    <script src=\\\"js\\/main.js\\\"><\\/script>/g], to: ['    <link rel=\\\"stylesheet\\\" href=\\\"styles\\/main.min.css\\\">', '<script src=\\\"js\\/app.min.js\\\"><\\/script>'] }); require('replace-in-file').sync({ files: 'dist/index.html', from: [/styles\\/intro.css/g, /js\\/intro.js/g], to: ['styles/intro.min.css', 'js/intro.min.js'] });\""
   },
   "keywords": [
     "mindmap",

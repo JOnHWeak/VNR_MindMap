@@ -3,138 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dòng chảy Lịch sử Đảng Cộng sản Việt Nam - Interactive Mindmap</title>
-        <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/mindmap.css">
-    <link rel="stylesheet" href="styles/animations.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Chào mừng - Lịch sử Đảng Cộng sản Việt Nam</title>
+    <link rel="stylesheet" href="styles/intro.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="loading-screen">
-        <div class="loading-content">
-            <div class="loading-logo">
-                <i class="fas fa-star"></i>
-            </div>
-            <h2>Dòng chảy Lịch sử Đảng Cộng sản Việt Nam</h2>
-            <div class="loading-bar">
-                <div class="loading-progress"></div>
-            </div>
-            <p>Đang tải nội dung...</p>
+    <div class="intro-container">
+        <div class="intro-content">
+            <h1 class="welcome-text">Chào mừng bạn đến với</h1>
+            <h2 class="main-title-intro">Dòng chảy Lịch sử Đảng Cộng sản Việt Nam</h2>
         </div>
     </div>
-
-    <!-- Header -->
-    <header class="header">
-        <div class="header-content">
-            <h1 class="main-title">
-                <i class="fas fa-star"></i>
-                Lịch sử Đảng Cộng sản Việt Nam
-            </h1>
-            <div class="header-controls">
-
-                <button id="fullscreen-btn" class="control-btn" title="Fullscreen">
-                    <i class="fas fa-expand"></i>
-                </button>
-                <button id="info-btn" class="control-btn" title="Thông tin">
-                    <i class="fas fa-info-circle"></i>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="main-container">
-        <!-- Mindmap Canvas -->
-        <div id="mindmap-container" class="mindmap-container">
-            <!-- D3.js will create the SVG here -->
-        </div>
-
-        <!-- Control Panel -->
-        <div class="control-panel">
-            <div class="zoom-controls">
-                <button id="zoom-in" class="zoom-btn">
-                    <i class="fas fa-plus"></i>
-                </button>
-                <span id="zoom-level">100%</span>
-                <button id="zoom-out" class="zoom-btn">
-                    <i class="fas fa-minus"></i>
-                </button>
-            </div>
-            
-            <div class="timeline-filter">
-                <h4>Giai đoạn</h4>
-                <div class="filter-options">
-                    <label class="filter-option">
-                        <input type="checkbox" checked data-period="1930-1945">
-                        <span class="period-1930">1930-1945</span>
-                    </label>
-                    <label class="filter-option">
-                        <input type="checkbox" checked data-period="1945-1975">
-                        <span class="period-1945">1945-1975</span>
-                    </label>
-                    <label class="filter-option">
-                        <input type="checkbox" checked data-period="1975-nay">
-                        <span class="period-1975">1975-nay</span>
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <!-- Detail Panel -->
-        <div id="detail-panel" class="detail-panel">
-            <div class="detail-header">
-                <h3 id="detail-title">Chi tiết sự kiện</h3>
-                <button id="close-detail" class="close-btn">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="detail-content">
-                <div id="detail-body">
-                    <!-- Content will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Info Modal -->
-    <div id="info-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Về dự án</h3>
-                <button class="close-modal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>Dự án "Dòng chảy Lịch sử Đảng Cộng sản Việt Nam" là một mindmap tương tác trình bày các giai đoạn phát triển quan trọng của Đảng từ 1930 đến nay.</p>
-                
-                <h4>Cách sử dụng:</h4>
-                <ul>
-                    <li>Click vào các nút để xem thông tin chi tiết</li>
-                    <li>Kéo để di chuyển mindmap</li>
-                    <li>Sử dụng nút zoom hoặc cuộn chuột để phóng to/thu nhỏ</li>
-                    <li>Sử dụng bộ lọc để hiển thị từng giai đoạn</li>
-                </ul>
-
-                <h4>Nguồn tham khảo:</h4>
-                <ul>
-                    <li>Giáo trình Lịch sử Đảng Cộng sản Việt Nam</li>
-                    <li>Tài liệu lịch sử từ các nguồn uy tín</li>
-                    <li>Hình ảnh và video từ kho tư liệu quốc gia</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-        <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="js/data.js"></script>
-    <script src="js/mindmap.js"></script>
-    <script src="js/interactions.js"></script>
-    <script src="js/animations.js"></script>
-    <script src="js/main.js"></script>
+    <script src="js/intro.js"></script>
 </body>
 </html>
