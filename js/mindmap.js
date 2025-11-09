@@ -18,12 +18,16 @@ class VietnameseCommunistPartyMindmap {
     this.width = window.innerWidth;
     this.height = window.innerHeight - 60;
 
+    this.zoomBehavior = d3.zoom()
+        .scaleExtent([0.25, 3])
+        .on("zoom", (event) => this.handleZoom(event));
+
     this.svg = this.container
       .append("svg")
       .attr("id", "mindmap-svg")
       .attr("width", this.width)
       .attr("height", this.height)
-      .call(d3.zoom().scaleExtent([0.25, 3]).on("zoom", (e) => this.handleZoom(e)))
+      .call(this.zoomBehavior)
       .on("click", () => this.deselectAll());
 
     this.g = this.svg.append("g");
@@ -509,6 +513,16 @@ class VietnameseCommunistPartyMindmap {
     const zl = document.getElementById("zoom-level");
     if (zl) zl.textContent = Math.round(e.transform.k * 100) + "%";
   }
+  zoomIn() {
+    this.svg.transition().duration(250).call(this.zoomBehavior.scaleBy, 1.2);
+  }
+  zoomOut() {
+    this.svg.transition().duration(250).call(this.zoomBehavior.scaleBy, 0.8);
+  }
+  resetView() {
+    this.svg.transition().duration(300).call(this.zoomBehavior.transform, d3.zoomIdentity);
+  }
+
   resize() {
     this.width = window.innerWidth;
     this.height = window.innerHeight - 60;
