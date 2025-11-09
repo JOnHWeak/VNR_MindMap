@@ -65,7 +65,7 @@ body {
 /* Floating Search Container */
 .search-container.floating {
     position: fixed;
-    bottom: 25px;
+    top: 100px;
     right: 25px;
     display: flex;
     align-items: center;
