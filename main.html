@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles/flag-silk.css">
     <link rel="stylesheet" href="styles/title-card.css">
+        <link rel="stylesheet" href="styles/aiChatbox.css">
 </head>
 <body>
     <!-- Loading Screen -->
@@ -98,6 +99,21 @@
                 </div>
             </div>
         </div>
+
+              <div id="chat-toggle">💬</div>
+
+    <!-- Chatbox -->
+    <div class="chat-container hidden" id="chatbox">
+      <div class="chat-header">
+        <span>AI Assistant</span>
+        <button id="closeChat">×</button>
+      </div>
+      <div class="chat-body" id="chatlog"></div>
+      <div class="chat-input">
+        <input type="text" id="userInput" placeholder="Nhập tin nhắn..." />
+        <button id="sendBtn">➤</button>
+      </div>
+    </div>
     </main>
         <!-- Floating Search Bar -->
         <div class="search-container floating">
@@ -140,6 +156,7 @@
         </div>
     </div>
 
+
     <!-- Scripts -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="js/data.js"></script>
@@ -147,6 +164,7 @@
     <script src="js/interactions.js"></script>
     <script src="js/animations.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/aiChatbox.js"></script>
     <script defer src="js/flag-silk.js"></script>
 </body>
 </html>
