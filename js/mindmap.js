@@ -480,6 +480,24 @@ class VietnameseCommunistPartyMindmap {
       this.svg.transition().duration(300).call(d3.zoom().transform, d3.zoomIdentity);
     }
 
+    focusOnNode(node) {
+      if (!node) return;
+
+      const p = this.pos.get(node.data.id);
+      if (!p) return;
+
+      const scale = 1.2; // Zoom level to focus on
+      const x = this.width / 2 - p.y * scale;
+      const y = this.height / 2 - p.x * scale;
+
+      const transform = d3.zoomIdentity.translate(x, y).scale(scale);
+
+      this.svg.transition()
+          .duration(750)
+          .call(d3.zoom().transform, transform);
+    }
+
+
     resize() {
       this.width = window.innerWidth;
       this.height = window.innerHeight - 60;

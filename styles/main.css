@@ -61,6 +61,67 @@ body {
 }
 
 /* Mindmap Container */
+
+/* Floating Search Container */
+.search-container.floating {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    display: flex;
+    align-items: center;
+    background-color: var(--background-light);
+    border-radius: 50px; /* Makes it a bubble */
+    padding: 5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease-in-out;
+    z-index: 1001;
+}
+
+#search-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-size: 14px;
+    width: 0;
+    padding: 5px 0;
+    opacity: 0;
+    transition: all 0.3s ease-in-out;
+}
+
+.search-container.floating:focus-within #search-input,
+#search-input:not(:placeholder-shown) {
+    width: 220px;
+    opacity: 1;
+    padding: 5px 10px;
+}
+
+#search-input::placeholder {
+    color: var(--text-secondary);
+}
+
+#search-input.no-results {
+    animation: shake 0.5s;
+}
+
+#search-btn {
+    background: var(--accent-color);
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+#search-btn:hover {
+    background-color: #c0392b;
+}
+
 .mindmap-container {
     flex-grow: 1;
     overflow: hidden;

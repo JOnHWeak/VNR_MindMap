@@ -12,6 +12,7 @@ class MindmapInteractions {
         this.setupKeyboardShortcuts();
         this.setupResizeHandler();
         this.setupDetailPanel();
+        this.setupSearch();
     }
 
     setupControlButtons() {
@@ -254,54 +255,84 @@ class MindmapInteractions {
 
     // Search functionality
     setupSearch() {
-        const searchInput = document.createElement('input');
-        searchInput.type = 'text';
-        searchInput.placeholder = 'Tìm kiếm sự kiện...';
-        searchInput.className = 'search-input';
-        
-        const controlPanel = document.querySelector('.control-panel');
-        const searchContainer = document.createElement('div');
-        searchContainer.className = 'search-container';
-        searchContainer.appendChild(searchInput);
-        controlPanel.appendChild(searchContainer);
-        
+        const searchInput = document.getElementById('search-input');
         let searchTimeout;
-        searchInput.addEventListener('input', (event) => {
+
+        searchInput.addEventListener('input', () => {
             clearTimeout(searchTimeout);
+
+            const query = searchInput.value.trim();
+
+            if (query === '') {
+                this.clearSearch();
+                return;
+            }
+
+            // Debounce the search function
             searchTimeout = setTimeout(() => {
-                this.performSearch(event.target.value);
-            }, 300);
+                this.performSearch(query);
+            }, 300); // Wait for 300ms after user stops typing
         });
     }
 
     performSearch(query) {
-        if (!query.trim()) {
-            // Clear search highlighting
-            this.mindmap.g.selectAll('.node').classed('search-highlight', false);
+        this.clearSearch(); // Clear previous results
+
+        if (!query || !query.trim()) {
             return;
         }
-        
-        const searchTerm = query.toLowerCase();
-        
-        // Find matching nodes
-        const matchingNodes = [];
-        this.mindmap.g.selectAll('.node-group').each(function(d) {
-            const nodeName = d.data.name.toLowerCase();
-            const nodeDescription = (d.data.description || '').toLowerCase();
-            
-            if (nodeName.includes(searchTerm) || nodeDescription.includes(searchTerm)) {
-                matchingNodes.push(d);
+
+        const searchTerm = query.trim().toLowerCase();
+        const allNodes = this.mindmap.g.selectAll('.node-group');
+        const allLinks = this.mindmap.g.selectAll('.link');
+
+        const matchingNodesData = [];
+        this.mindmap.root.each(d => { // Iterate through the hierarchy data
+            if (d.data.name && d.data.name.toLowerCase().includes(searchTerm)) {
+                matchingNodesData.push(d);
             }
         });
-        
-        // Highlight matching nodes
-        this.mindmap.g.selectAll('.node')
-            .classed('search-highlight', d => matchingNodes.includes(d));
-        
-        // If only one match, focus on it
-        if (matchingNodes.length === 1) {
-            this.mindmap.handleNodeClick(null, matchingNodes[0]);
+
+        if (matchingNodesData.length > 0) {
+            // Dim all nodes and links
+            allNodes.classed('dimmed', true);
+            allLinks.classed('dimmed', true);
+
+            const nodesToHighlight = new Set();
+
+            matchingNodesData.forEach(node => {
+                // Highlight the node and its ancestors
+                let current = node;
+                while (current) {
+                    nodesToHighlight.add(current.data.id);
+                    current = current.parent;
+                }
+            });
+
+            // Apply highlight and remove dimming
+            allNodes.filter(d => nodesToHighlight.has(d.data.id))
+                .classed('dimmed', false)
+                .classed('search-highlight', d => d.data.name && d.data.name.toLowerCase().includes(searchTerm));
+
+            allLinks.filter(l => nodesToHighlight.has(l.source.data.id) && nodesToHighlight.has(l.target.data.id))
+                .classed('dimmed', false);
+
+            // Zoom to the first found node
+            const firstMatch = matchingNodesData[0];
+            this.mindmap.focusOnNode(firstMatch);
+
+        } else {
+            // Show a popup if no results are found
+            alert('Không tìm thấy sự kiện nào khớp với từ khóa của bạn.');
         }
+    }
+
+    clearSearch() {
+        this.mindmap.g.selectAll('.node-group')
+            .classed('dimmed', false)
+            .classed('search-highlight', false);
+
+        this.mindmap.g.selectAll('.link').classed('dimmed', false);
     }
 
     // Accessibility improvements

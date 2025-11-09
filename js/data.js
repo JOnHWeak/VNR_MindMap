@@ -198,125 +198,225 @@ const mindmapData = {
                     ]
                 },
                 {
-                    id: "sub-1986-nay",
-                    name: "Lãnh đạo công cuộc Đổi mới (1986 - nay)",
+                    id: "sub-1986-2018",
+                    name: "Đổi mới, CNH, HĐH & Hội nhập (1986-2018)",
                     type: "sub",
                     period: "1975-nay",
-                    description: "Nhánh 2: Từ bước ngoặt Đổi Mới 1986 đến đẩy mạnh CNH, HĐH và hội nhập quốc tế.",
+                    description: "Giai đoạn đất nước thực hiện công cuộc Đổi Mới, công nghiệp hóa, hiện đại hóa và hội nhập quốc tế.",
                     content: {
-                        summary: "Giai đoạn này là bước ngoặt lịch sử, chuyển đổi từ mô hình kinh tế kế hoạch hóa, bao cấp sang kinh tế thị trường định hướng XHCN, mở cửa hội nhập, đưa đất nước ra khỏi khủng hoảng và đạt được những thành tựu to lớn, có ý nghĩa lịch sử.",
-                        citations: ["Session 22-28"]
+                        summary: "Từ năm 1986, Đảng khởi xướng và lãnh đạo công cuộc Đổi Mới toàn diện, đưa đất nước ra khỏi khủng hoảng kinh tế - xã hội, chuyển đổi sang nền kinh tế thị trường định hướng xã hội chủ nghĩa, đẩy mạnh công nghiệp hóa, hiện đại hóa và chủ động hội nhập quốc tế."
                     },
                     children: [
                         {
-                            id: "event-dai-hoi-VI-1986",
-                            name: "Đại hội VI (12/1986)",
+                            id: "branch-doi-moi-toan-dien-1986-1996",
+                            name: "Giai đoạn đổi mới toàn diện (1986-1996)",
                             type: "event",
                             period: "1975-nay",
-                            description: "Bước ngoặt Đổi Mới: Bối cảnh lạm phát 774% (1986).",
-                            content: {
-                                summary: "Bước ngoặt Đổi Mới: Bối cảnh lạm phát 774% (1986). Đại hội khởi xướng đường lối Đổi Mới toàn diện. Tư duy: 'Nhìn thẳng vào sự thật, đánh giá đúng sự thật, nói rõ sự thật'. Cốt lõi: Xóa bỏ cơ chế tập trung quan liêu, bao cấp. Chấp nhận kinh tế hàng hóa nhiều thành phần. Quán triệt tư tưởng 'lấy dân làm gốc'. Triển khai: Nổi bật là 'Khoán 10' (Nghị quyết 10-NQ/TW ngày 5/4/1988), giao ruộng đất ổn định, lâu dài cho hộ nông dân.",
-                                citations: ["Session 22"]
-                            }
+                            children: [
+                                {
+                                    id: "event-dai-hoi-vi-1986",
+                                    name: "Đại hội VI (12/1986) - Khởi đầu đổi mới",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Bối cảnh: Khủng hoảng KT-XH, lạm phát 774.7% (1986). Nội dung: Đề ra đường lối đổi mới toàn diện, xóa bỏ cơ chế tập trung, quan liêu, bao cấp; chuyển sang kinh tế hàng hóa nhiều thành phần. Kết quả: Lạm phát giảm, tự chủ lương thực (xuất khẩu gạo từ 1989)."
+                                    }
+                                },
+                                {
+                                    id: "event-dieu-chinh-chinh-sach-1979-1989",
+                                    name: "Điều chỉnh chính sách (1979-1989)",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Hội nghị TW 6 (1979): 'Phá rào' cho sản xuất bung ra. Chỉ thị 100 (1981): Khoán sản phẩm trong nông nghiệp. Hội nghị TW 6 (1989): Xác định đổi mới là con đường tất yếu."
+                                    }
+                                },
+                                {
+                                    id: "event-khoan-10-nong-nghiep",
+                                    name: "Khoán 10 và chính sách nông nghiệp",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Nghị quyết 10 (4/1988): Khoán sản phẩm cuối cùng cho nông dân, giao đất canh tác trong 15 năm, tạo động lực mạnh mẽ cho sản xuất nông nghiệp."
+                                    }
+                                },
+                                {
+                                    id: "event-doi-moi-cong-nghiep",
+                                    name: "Đổi mới trong công nghiệp",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Quyết định 25-CP và 26-CP (1/1981): Tăng quyền chủ động sản xuất, kinh doanh và tự chủ tài chính cho xí nghiệp quốc doanh, mở rộng hình thức lương khoán, lương sản phẩm."
+                                    }
+                                },
+                                {
+                                    id: "event-dai-hoi-vii-1991",
+                                    name: "Đại hội VII (6/1991) - Tiếp tục đổi mới",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Thông qua Cương lĩnh 1991, xác định 6 đặc trưng của CNXH và 7 phương hướng xây dựng. Đề ra chiến lược KT-XH đến năm 2000 (GDP tăng gấp đôi 1990)."
+                                    }
+                                }
+                            ]
                         },
                         {
-                            id: "event-dai-hoi-VII-1991",
-                            name: "Đại hội VII (6/1991)",
+                            id: "branch-tiep-tuc-doi-moi-1991-1996",
+                            name: "Giai đoạn tiếp tục đổi mới (1991-1996)",
                             type: "event",
                             period: "1975-nay",
-                            description: "Thông qua Cương lĩnh 1991 (Xây dựng đất nước trong thời kỳ quá độ lên CNXH).",
-                            content: {
-                                summary: "Thông qua Cương lĩnh 1991 (Xây dựng đất nước trong thời kỳ quá độ lên CNXH). Đề ra 6 đặc trưng XHCN và 5 bài học lớn. Thông qua Chiến lược KT-XH đến 2000 (mục tiêu GDP 2000 gấp đôi 1990). Hội nghị giữa nhiệm kỳ (1/1994): Lần đầu khẳng định chủ trương xây dựng Nhà nước pháp quyền XHCN và xác định 4 nguy cơ (Tụt hậu kinh tế, Chệch hướng XHCN, Tham nhũng, 'Diễn biến hòa bình'). Đối ngoại: Gia nhập ASEAN (1995), bình thường hóa quan hệ với Hoa Kỳ (1995).",
-                                citations: ["Session 22, 23"]
-                            }
+                            children: [
+                                {
+                                    id: "event-ket-qua-1991-1996",
+                                    name: "Mục tiêu và kết quả chung",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "GDP tăng 8.2%/năm, lạm phát giảm còn 12.7% (1995). Nền kinh tế thị trường hàng hóa nhiều thành phần hình thành. Bắt đầu có tích lũy từ nội bộ nền kinh tế."
+                                    }
+                                },
+                                {
+                                    id: "event-chinh-sach-doi-ngoai-1992",
+                                    name: "Chính sách đối ngoại (Hội nghị TW 3, 6/1992)",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Bình thường hóa quan hệ với Trung Quốc (1991), Hoa Kỳ (1995). Gia nhập ASEAN (1995). Đến 1995, có quan hệ ngoại giao với 160 nước."
+                                    }
+                                },
+                                {
+                                    id: "event-hiep-dinh-bien-gioi-tq",
+                                    name: "Hiệp định biên giới với Trung Quốc",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Ký kết năm 1999, hoàn thành phân giới cắm mốc trên đất liền vào 31/12/2008, tạo nền tảng cho hòa bình, ổn định."
+                                    }
+                                },
+                                {
+                                    id: "event-phat-trien-nong-thon-1993",
+                                    name: "Chính sách về nông dân, nông nghiệp",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Hội nghị TW 5 (6/1993) và TW 7 (7/1994) tập trung vào xây dựng nông thôn mới và phát triển công nghiệp, công nghệ."
+                                    }
+                                }
+                            ]
                         },
                         {
-                            id: "event-dai-hoi-VIII-1996",
-                            name: "Đại hội VIII (6/1996)",
+                            id: "branch-cnh-hdh-1996-2001",
+                            name: "Giai đoạn CNH, HĐH (1996-2001)",
                             type: "event",
                             period: "1975-nay",
-                            description: "Chủ trương đẩy mạnh Công nghiệp hóa, Hiện đại hóa (CNH-HĐH) đất nước.",
-                            content: {
-                                summary: "Bối cảnh: Đất nước ra khỏi khủng hoảng KT-XH. Chủ trương: Đẩy mạnh Công nghiệp hóa, Hiện đại hóa (CNH-HĐH) đất nước. Bổ sung đặc trưng: 'Dân giàu, nước mạnh, xã hội công bằng, văn minh'. Triển khai: Nghị quyết TW 5 (1998) về 'Xây dựng nền văn hóa Việt Nam tiên tiến, đậm đà bản sắc dân tộc'.",
-                                citations: ["Session 23"]
-                            }
+                            children: [
+                                {
+                                    id: "event-dai-hoi-viii-1996",
+                                    name: "Đại hội VIII (6/1996)",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Tổng kết 10 năm đổi mới, đề ra mục tiêu chuyển sang thời kỳ công nghiệp hóa, hiện đại hóa đất nước."
+                                    }
+                                },
+                                {
+                                    id: "event-chinh-sach-fdi",
+                                    name: "Chính sách FDI và hợp tác quốc tế",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Luật Đầu tư nước ngoài có hiệu lực từ 1/1/1988, thu hút mạnh mẽ vốn đầu tư nước ngoài (FDI đạt 20.3 tỷ USD)."
+                                    }
+                                }
+                            ]
                         },
                         {
-                            id: "event-dai-hoi-IX-2001",
-                            name: "Đại hội IX (4/2001)",
+                            id: "branch-nang-cao-hoan-thien-2001-2018",
+                            name: "Giai đoạn nâng cao và hoàn thiện (2001-2018)",
                             type: "event",
                             period: "1975-nay",
-                            description: "Chủ đề: 'Đất nước bước vào thế kỷ mới'.",
-                            content: {
-                                summary: "Chủ đề: 'Đất nước bước vào thế kỷ mới'. Chính thức xác định: 'Kinh tế thị trường định hướng XHCN' là mô hình kinh tế tổng quát. Triển khai: Hội nghị TW 5 (2002) ra Nghị quyết về phát triển kinh tế tư nhân, coi đây là 'bộ phận cấu thành quan trọng' và 'vấn đề chiến lược lâu dài'.",
-                                citations: ["Session 24"]
-                            }
+                            children: [
+                                {
+                                    id: "event-dai-hoi-ix-2001",
+                                    name: "Đại hội IX (8/2001)",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Tiếp tục đổi mới, nâng cao hiệu quả doanh nghiệp nhà nước trong bối cảnh thế giới phức tạp sau sự kiện 11/9/2001."
+                                    }
+                                },
+                                {
+                                    id: "event-chien-luoc-bvtq-2003",
+                                    name: "Chiến lược bảo vệ Tổ quốc (Hội nghị TW 8, 7/2003)",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Đề ra chiến lược bảo vệ Tổ quốc trong tình hình mới, bao gồm bảo vệ độc lập, chủ quyền, Đảng, Nhà nước, nhân dân và chế độ XHCN."
+                                    }
+                                },
+                                {
+                                    id: "event-gia-nhap-wto-2006",
+                                    name: "WTO và hội nhập quốc tế",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Việt Nam chính thức gia nhập WTO (11/2006), một dấu mốc quan trọng trong hội nhập kinh tế quốc tế. Sau 1 năm, GDP tăng 8.48%, FDI đạt 20.3 tỷ USD."
+                                    }
+                                },
+                                {
+                                    id: "event-phat-trien-kinh-te-tu-nhan-2002",
+                                    name: "Phát triển kinh tế tư nhân (Hội nghị TW 5, 3/2002)",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Coi kinh tế tập thể và kinh tế tư nhân là bộ phận quan trọng, chiến lược lâu dài của nền kinh tế."
+                                    }
+                                },
+                                {
+                                    id: "event-dai-hoi-x-xi",
+                                    name: "Đại hội X (2006) và XI (2011)",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Đại hội X: Tiếp tục đổi mới toàn diện. Đại hội XI: Thông qua Cương lĩnh (bổ sung, phát triển 2011), kỷ niệm 1000 năm Thăng Long-Hà Nội."
+                                    }
+                                }
+                            ]
                         },
                         {
-                            id: "event-dai-hoi-X-2006",
-                            name: "Đại hội X (4/2006)",
+                            id: "branch-thanh-tuu-han-che",
+                            name: "Thành tựu và Hạn chế (1986-2018)",
                             type: "event",
                             period: "1975-nay",
-                            description: "Chủ đề: 'Sớm đưa nước ta ra khỏi tình trạng kém phát triển'.",
-                            content: {
-                                summary: "Chủ đề: 'Sớm đưa nước ta ra khỏi tình trạng kém phát triển'. Bổ sung Điều lệ Đảng: Cho phép Đảng viên làm kinh tế tư nhân. Thành tựu lớn: Việt Nam chính thức gia nhập WTO (11/2006). Năm 2008, Việt Nam ra khỏi nhóm nước nghèo. Triển khai: Nghị quyết 09 (2007) về Chiến lược biển Việt Nam đến 2020.",
-                                citations: ["Session 25"]
-                            }
-                        },
-                        {
-                            id: "event-dai-hoi-XI-2011",
-                            name: "Đại hội XI (1/2011)",
-                            type: "event",
-                            period: "1975-nay",
-                            description: "Thông qua Cương lĩnh (bổ sung, phát triển năm 2011).",
-                            content: {
-                                summary: "Thông qua Cương lĩnh (bổ sung, phát triển năm 2011). Đề ra 8 đặc trưng XHCN và 8 mối quan hệ lớn cần giải quyết. Đề ra 3 đột phá chiến lược: (1) Hoàn thiện thể chế KTTT; (2) Phát triển nguồn nhân lực chất lượng cao; (3) Xây dựng kết cấu hạ tầng đồng bộ. Xây dựng Đảng: Nghị quyết TW 4 khóa XI (1/2012) về 'Một số vấn đề cấp bách trong xây dựng Đảng hiện nay'.",
-                                citations: ["Session 26"]
-                            }
-                        },
-                        {
-                            id: "event-dai-hoi-XII-2016",
-                            name: "Đại hội XII (1/2016)",
-                            type: "event",
-                            period: "1975-nay",
-                            description: "Chủ đề: Đẩy mạnh toàn diện, đồng bộ công cuộc đổi mới.",
-                            content: {
-                                summary: "Chủ đề: Đẩy mạnh toàn diện, đồng bộ công cuộc đổi mới. Kinh tế: Hội nghị TW 5 (6/2017) ra Nghị quyết 10-NQ/TW, khẳng định kinh tế tư nhân là một động lực quan trọng của nền kinh tế. Xây dựng Đảng: Nghị quyết TW 4 khóa XII (10/2016) về tăng cường xây dựng, chỉnh đốn Đảng, ngăn chặn 'tự diễn biến', 'tự chuyển hóa'.",
-                                citations: ["Session 27"]
-                            }
-                        },
-                        {
-                            id: "event-dai-hoi-XIII-2021",
-                            name: "Đại hội XIII (1/2021)",
-                            type: "event",
-                            period: "1975-nay",
-                            description: "Khơi dậy khát vọng phát triển đất nước phồn vinh, hạnh phúc.",
-                            content: {
-                                summary: "Nhận định: 'Đất nước ta chưa bao giờ có được cơ đồ, tiềm lực, vị thế và uy tín quốc tế như ngày nay'. Mục tiêu 2025: Vượt mức thu nhập trung bình thấp. Mục tiêu 2030: Thu nhập trung bình cao. Mục tiêu 2045: Nước phát triển, thu nhập cao.",
-                                citations: ["Session 27, 28"]
-                            }
-                        },
-                        {
-                            id: "event-achievements-lessons",
-                            name: "Thành tựu, kinh nghiệm",
-                            type: "event",
-                            period: "1975-nay",
-                            description: "Những kết quả nổi bật và bài học kinh nghiệm từ công cuộc Đổi Mới.",
-                            content: {
-                                summary: "Thành tựu: GDP 2020 đạt 271.2 tỷ USD, ra khỏi nhóm nước nghèo (2008), chính trị ổn định, đối ngoại rộng mở. Bài học: Phải 'lấy dân làm gốc', xây dựng Đảng là then chốt.",
-                                citations: ["Session 28"]
-                            }
-                        },
-                        {
-                            id: "event-corruption-challenge",
-                            name: "Nguyên nhân và tác hại của tham nhũng",
-                            type: "event",
-                            period: "1975-nay",
-                            description: "Thách thức về tham nhũng trong giai đoạn hiện nay.",
-                            content: {
-                                summary: "Nguyên nhân: Hạn chế về pháp luật, quản lý kinh tế, phát hiện và xử lý, suy thoái đạo đức cán bộ. Tác hại: Đe dọa sự tồn vong của chế độ, làm giảm sút lòng tin của nhân dân, thất thoát kinh tế.",
-                                citations: ["Session 29"]
-                            }
+                            children: [
+                                {
+                                    id: "event-thanh-tuu-doi-moi",
+                                    name: "Thành tựu lớn",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Đưa đất nước ra khỏi khủng hoảng KT-XH, GDP tăng trưởng cao, xóa bỏ bao cấp, hội nhập quốc tế sâu rộng (ASEAN, WTO), bình thường hóa quan hệ với các nước lớn."
+                                    }
+                                },
+                                {
+                                    id: "event-han-che-yeu-kem",
+                                    name: "Hạn chế, yếu kém",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "Kinh tế còn kém phát triển so với khu vực, tham nhũng, quan liêu, bất bình đẳng xã hội vẫn còn tồn tại. Nguyên nhân do điểm xuất phát thấp, hậu quả chiến tranh, cấm vận và sai lầm trong quản lý."
+                                    }
+                                },
+                                {
+                                    id: "event-bai-hoc-kinh-nghiem",
+                                    name: "Bài học kinh nghiệm",
+                                    type: "event",
+                                    period: "1975-nay",
+                                    content: {
+                                        summary: "5 bài học chính: Giữ vững mục tiêu ĐLDT và CNXH; Cách mạng là của nhân dân; Củng cố đoàn kết; Kết hợp sức mạnh dân tộc và thời đại; Sự lãnh đạo của Đảng là nhân tố quyết định."
+                                    }
+                                }
+                            ]
                         }
                     ]
                 }
