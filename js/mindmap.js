@@ -2,13 +2,13 @@
 
 // ===== Cấu hình Tilt cho node trung tâm =====
 const CENTRAL_CARD = {
-  width: 260,        // px - sẽ được cập nhật theo ảnh
-  height: 64,        // px - sẽ được cập nhật theo ảnh
+  width: 400,        // px - sẽ được cập nhật theo ảnh
+  height: 80,        // px - sẽ được cập nhật theo ảnh
   scaleOnHover: 1.06,
   rotateAmplitude: 12 // độ nghiêng tối đa (độ)
 };
 const CENTRAL_IMG_SRC = "assets/LSDCSVN.png";
-const CENTRAL_SIZE = { MIN_W: 360, MAX_W: 560, MIN_H: 72 }; // biên an toàn (kéo ngang hơn để hợp 2 dòng)
+const CENTRAL_SIZE = { MIN_W: 400, MAX_W: 600, MIN_H: 80 }; // biên an toàn (kéo ngang hơn để hợp 2 dòng)
 
 class VietnameseCommunistPartyMindmap {
   constructor(containerId, data) {
@@ -18,35 +18,18 @@ class VietnameseCommunistPartyMindmap {
     this.width = window.innerWidth;
     this.height = window.innerHeight - 60;
 
-    this.zoomBehavior = d3.zoom()
-        .scaleExtent([0.25, 3])
-        .on("zoom", (event) => this.handleZoom(event));
-
     this.svg = this.container
       .append("svg")
       .attr("id", "mindmap-svg")
       .attr("width", this.width)
       .attr("height", this.height)
-      .call(this.zoomBehavior)
+      .call(d3.zoom().scaleExtent([0.25, 3]).on("zoom", (e) => this.handleZoom(e)))
       .on("click", () => this.deselectAll());
 
     this.g = this.svg.append("g");
     this.tooltip = d3.select("body").append("div").attr("class", "tooltip");
 
-    // Initialize collapsed nodes set
-    this.collapsedNodes = new Set();
-
     this.root = d3.hierarchy(this.data);
-
-    // Initialize all nodes with children as collapsed by default (except root and first two levels)
-    // This means detail nodes (depth 3+) will be collapsed initially
-    this.root.each(node => {
-      if (node.children && node.depth >= 3) {
-        this.collapsedNodes.add(node.data.id);
-        node._children = node.children;
-        node.children = null;
-      }
-    });
 
     // Tự scale card theo tỉ lệ ảnh trung tâm
     const img = new Image();
@@ -96,13 +79,35 @@ class VietnameseCommunistPartyMindmap {
     return Number.isFinite(n) ? n : null;
   }
   sideOf(node) {
-    if (node.depth === 0) return 0;
-    const anc = this.getTopPeriodNode(node);
+    if (node.depth === 0) return 0; // Root is center
+
+    // 1. Find the main branch (depth 1 ancestor)
+    let mainBranch = node;
+    while (mainBranch.depth > 1 && mainBranch.parent) {
+        mainBranch = mainBranch.parent;
+    }
+
+    // 2. Check if this is a valid main branch
+    if (mainBranch.depth === 1 && mainBranch.data.name) {
+        const name = mainBranch.data.name;
+        // 3. Check for "NHÁNH X"
+        const match = name.match(/^NHÁNH (\d)/);
+        if (match) {
+            const branchNum = parseInt(match[1], 10);
+            // 4. Split 3-3
+            return (branchNum <= 3) ? -1 : +1; // Nhánh 1, 2, 3 -> left (-1), 4, 5, 6 -> right (+1)
+        }
+    }
+
+    // 5. Fallback logic (from old code, will default to right)
+    const anc = this.getTopPeriodNode(node); // getTopPeriodNode is still relevant
     const start = anc ? this.periodStartYear(anc) : null;
-    if (start != null) return start >= 1975 ? +1 : -1; // 1975+ => phải
+    if (start != null) return start >= 1975 ? +1 : -1; 
+    
     const label = (anc?.data?.title || anc?.data?.name || anc?.data?.period || "").toLowerCase();
     if (label.includes("1975")) return +1;
-    return -1;
+
+    return +1; // Default to right if all else fails
   }
 
   /* -------------------- LAYOUT -------------------- */
@@ -111,8 +116,8 @@ class VietnameseCommunistPartyMindmap {
     const levelGapX = 220;      // khoảng cách ngang cơ sở d3.tree
     const levelGapY = 70;       // khoảng cách dọc cơ sở
     const baseChildGap = 90;    // gap dọc tối thiểu giữa con
-    const baseGrandGap = 60;    // gap dọc tối thiểu giữa cháu
-    const periodYOffset = 180;  // 1930 lên, 1945 xuống, 1975 ngang
+    // const baseGrandGap = 60;    // BỎ
+    // const periodYOffset = 180;  // BỎ
     const padBetweenRootAndPeriod = 36;
     const padBetweenLevels = 56; // đệm ngang cha–con
     const edgeTop = 120, edgeBot = 140; // lề trên/dưới vùng dàn trải 1975–nay
@@ -125,24 +130,19 @@ class VietnameseCommunistPartyMindmap {
     const L = d3.hierarchy(this.data);
     L.each((d) => { d._w = this.getNodeWidth(d); d._h = this.getNodeHeight(d); });
 
-    // Con root: TRÁI trước, PHẢI sau
+    // Con root: Sắp xếp theo tên (NHÁNH 1, 2, 3...)
     if (L.children?.length) {
       L.children.sort((a, b) => {
         const sa = this.sideOf(a);
         const sb = this.sideOf(b);
         if (sa !== sb) return sa - sb;
-        const na = (a.data.title || a.data.name || "") + "";
-        const nb = (b.data.title || b.data.name || "") + "";
+        const na = (a.data.name || "") + "";
+        const nb = (b.data.name || "") + "";
         return na.localeCompare(nb, "vi");
       });
-    } else {
-      for (const n of depth2Nodes) {
-        const topPeriod = this.getTopPeriodNode(n);
-        const is1975 = topPeriod && (this.periodStartYear(topPeriod) ?? 0) >= 1975;
-        const gapForThis = is1975 ? within1975Gap : baseGrandGap;
-        spreadChildrenAdaptive(n, n.x, gapForThis);
-      }
-    }
+    } 
+    // SỬA LỖI: Xóa khối 'else' bị lỗi ở đây
+    
 
     tree(L); // layout gốc
 
@@ -154,15 +154,16 @@ class VietnameseCommunistPartyMindmap {
     const spreadChildrenAdaptive = (parent, anchorY, baseGap, explicitGap) => {
       const kids = parent.children || [];
       if (!kids.length) { parent.x = anchorY; return; }
-
+    
       kids.sort((a, b) => {
         const oa = a.data.order ?? null, ob = b.data.order ?? null;
         if (oa != null && ob != null && oa !== ob) return oa - ob;
         const ya = parseYearFromName(a.data.name), yb = parseYearFromName(b.data.name);
         if (ya != null && yb != null && ya !== yb) return ya - yb;
+        // Sửa: Luôn sắp xếp theo tên (NHÁNH 1, 2, 3...)
         return (a.data.name || "").localeCompare(b.data.name || "", "vi");
       });
-
+    
       const maxH = d3.max(kids, (k) => k._h || 30) || 30;
       const gapBase = Math.max(baseGap, maxH + 28);
       const gap = (explicitGap != null) ? Math.max(explicitGap, gapBase) : gapBase;
@@ -171,103 +172,69 @@ class VietnameseCommunistPartyMindmap {
       const start = -(n - 1) / 2;
       for (let i = 0; i < n; i++) kids[i].x = anchorY + (start + i) * gap;
       parent.x = d3.mean(kids, (k) => k.x); // cha đứng giữa
-    };
+    };    
 
-    // ---- đặt anchor cho 3 giai đoạn ----
+    // ---- đặt anchor cho 6 giai đoạn ----
     const rootX0 = L.x;
     const periods = (L.children || []).filter((d) => d.data?.type === "period");
-    let p1930 = null, p1945 = null, p1975 = null;
-    for (const p of periods) {
-      const start = this.periodStartYear(p);
-      if (start === 1930) p1930 = p;
-      else if (start === 1945) p1945 = p;
-      else if (start >= 1975) p1975 = p;
+
+    // Sắp xếp theo tên (NHÁNH 1, 2...)
+    periods.sort((a, b) => (a.data.name || "").localeCompare(b.data.name || "", "vi"));
+
+    const leftPeriods = periods.filter(p => this.sideOf(p) === -1);
+    const rightPeriods = periods.filter(p => this.sideOf(p) === +1);
+
+    const spreadSideChildren = (kids, anchorY, baseGap, explicitGap) => {
+        if (!kids || !kids.length) return;
+    
+        // Sắp xếp lại theo tên (đảm bảo)
+        kids.sort((a, b) => {
+          return (a.data.name || "").localeCompare(b.data.name || "", "vi");
+        });
+    
+        const maxH = d3.max(kids, (k) => k._h || 30) || 30;
+        const gapBase = Math.max(baseGap, maxH + 28);
+        const gap = (explicitGap != null) ? Math.max(explicitGap, gapBase) : gapBase;
+    
+        const num = kids.length;
+        const start = -(num - 1) / 2; // (e.g., 3 kids: -1, 0, 1)
+        for (let i = 0; i < num; i++) kids[i].x = anchorY + (start + i) * gap;
+    };
+
+    const n = Math.max(leftPeriods.length, rightPeriods.length, 1); // Get max number of kids on one side (should be 3)
+    const avail = (this.height - edgeTop - edgeBot);
+    
+    // SỬA LỖI CHỒNG CHÉO:
+    // Tăng mạnh khoảng cách tối thiểu (từ 140 -> 450) và bỏ giới hạn trên (220)
+    const desiredGap = Math.max(450, avail / Math.max(2, n - 1)); // Tăng min gap, bỏ max cap
+
+    if (leftPeriods.length > 0) {
+        spreadSideChildren(leftPeriods, rootX0, baseChildGap, desiredGap);
     }
-    // 1930: trên, 1945: dưới
-    if (p1930) spreadChildrenAdaptive(p1930, rootX0 - periodYOffset, baseChildGap);
-    if (p1945) spreadChildrenAdaptive(p1945, rootX0 + periodYOffset, baseChildGap);
-
-    // 1975–nay: adaptive theo số lượng con
-    if (p1975) {
-      const n = (p1975.children || []).length || 1;
-      const avail = (this.height - edgeTop - edgeBot);
-
-      // Nếu chỉ có 2 nhánh lớn -> tách mạnh tay để không chồng vùng cháu
-      let desired;
-      if (n <= 2) {
-        desired = Math.max(220, Math.min(320, avail * 0.65));
-      } else {
-        desired = Math.min(140, Math.max(90, avail / Math.max(2, n - 1)));
-      }
-      spreadChildrenAdaptive(p1975, rootX0, baseChildGap, desired);
+    if (rightPeriods.length > 0) {
+        spreadSideChildren(rightPeriods, rootX0, baseChildGap, desiredGap);
     }
-
-    // ---- dàn đều cháu (depth=2) ----
-    const depth2Nodes = L.descendants().filter(
-      (d) => d.depth === 2 && d.children && d.children.length
+    
+    // ---- Dàn đều các con (depth=2) của 6 nhánh chính ----
+    const depth1Nodes = L.descendants().filter(
+      (d) => d.depth === 1 && d.children && d.children.length
     );
-    const within1975Gap = 54; // gap cháu cho 1975–nay (hẹp gọn)
+    
+    // Khoảng cách dọc giữa các node "1.1", "1.2"
+    const depth2NodeGap = 80; // Giữ 80 là đủ
 
-    // 1) Xử lý riêng cụm 1975–nay: dịch 2 nhánh lớn lên/xuống 3 bước
-    const p1975Node = (L.children || []).find(
-      (c) => (this.periodStartYear(c) ?? 0) >= 1975
-    );
-
-    if (p1975Node) {
-      const bigKids = (p1975Node.children || []).filter(
-        (c) => c.depth === 2 && c.children && c.children.length
-      );
-
-      if (bigKids.length >= 2) {
-        bigKids.sort((a, b) => a.x - b.x);
-        const topKid = bigKids[0];
-        const bottomKid = bigKids[1];
-
-        const offset = within1975Gap * 3; // đẩy 3 bậc
-
-        spreadChildrenAdaptive(topKid, topKid.x - offset, within1975Gap);
-        spreadChildrenAdaptive(bottomKid, bottomKid.x + offset, within1975Gap);
-
-        const skipIds = new Set([topKid.data.id, bottomKid.data.id]);
-        for (const n of depth2Nodes) {
-          if (skipIds.has(n.data.id)) continue;
-          const topPeriod = this.getTopPeriodNode(n);
-          const is1975 = topPeriod && (this.periodStartYear(topPeriod) ?? 0) >= 1975;
-          const gapForThis = is1975 ? within1975Gap : baseGrandGap;
-          spreadChildrenAdaptive(n, n.x, gapForThis);
-        }
-      } else {
-        for (const n of depth2Nodes) {
-          const topPeriod = this.getTopPeriodNode(n);
-          const is1975 = topPeriod && (this.periodStartYear(topPeriod) ?? 0) >= 1975;
-          const gapForThis = is1975 ? within1975Gap : baseGrandGap;
-          spreadChildrenAdaptive(n, n.x, gapForThis);
-        }
-      }
-    } else {
-      for (const n of depth2Nodes) {
-        const topPeriod = this.getTopPeriodNode(n);
-        const is1975 = topPeriod && (this.periodStartYear(topPeriod) ?? 0) >= 1975;
-        const gapForThis = is1975 ? within1975Gap : baseGrandGap;
-        spreadChildrenAdaptive(n, n.x, gapForThis);
-      }
+    for (const node of depth1Nodes) {
+        // Dàn đều các con của nó (e.g., "1.1", "1.2", "1.3")
+        // dùng chính vị trí .x của cha làm tâm
+        spreadChildrenAdaptive(node, node.x, depth2NodeGap);
     }
-
-    // ---- chống va chạm trong từng nhóm con cùng cha ----
-    const deep1975Parents = L.descendants().filter((d) => {
-      if (!d.children || !d.children.length) return false;
-      if (d.depth < 3) return false; // chỉ xử lý các nhánh sâu để tách lá
-      const topPeriod = this.getTopPeriodNode(d);
-      return topPeriod && (this.periodStartYear(topPeriod) ?? 0) >= 1975;
-    });
-
-    const leafGap1975 = 54; // có thể tăng 60–70 nếu muốn dãn hơn
-    for (const p of deep1975Parents) {
-      spreadChildrenAdaptive(p, p.x, leafGap1975);
-    }
-
+    
+    // ---- Chống va chạm cho các node CÙNG CẤP (siblings) ----
     const padY = 10;
-    const groupsByParent = d3.group(L.descendants().filter(d => d.parent), d => d.parent.data.id);
+    
+    // Sửa lỗi logic: Chỉ áp dụng cho các node con (depth > 1)
+    const groupsByParent = d3.group(L.descendants().filter(d => d.parent && d.depth > 1), d => d.parent.data.id);
+    
     for (const [, kids] of groupsByParent) {
       kids.sort((a, b) => a.x - b.x);
       let last = -Infinity;
@@ -284,53 +251,6 @@ class VietnameseCommunistPartyMindmap {
     }
 
     // ---- tính khoảng cách NGANG tuyệt đối (né dính theo bề rộng) ----
-    if (p1975Node) {
-      const branchLevel2 = (p1975Node.children || []).filter(
-        (b) => b.depth === 2 && b.children && b.children.length
-      );
-      const subtreePad = 18; // khoảng cách giữa 2 cụm con
-
-      for (const branch of branchLevel2) {
-        const subroots = (branch.children || []).filter(
-          (c) => c.children && c.children.length
-        );
-        if (subroots.length <= 1) continue;
-
-        // sắp xếp từ trên xuống dưới theo vị trí hiện tại
-        subroots.sort((a, b) => a.x - b.x);
-        let cursor = -Infinity;
-
-        for (const sr of subroots) {
-          const nodes = sr.descendants();
-          let top = Infinity;
-          let bottom = -Infinity;
-
-          // tính biên trên/dưới của cả cụm
-          for (const node of nodes) {
-            const half = (node._h || 30) / 2;
-            const t = node.x - half;
-            const btm = node.x + half;
-            if (t < top) top = t;
-            if (btm > bottom) bottom = btm;
-          }
-
-          if (cursor === -Infinity) {
-            cursor = bottom;
-            continue;
-          }
-
-          const minTop = cursor + subtreePad;
-          if (top < minTop) {
-            const shift = minTop - top;
-            nodes.forEach((n) => { n.x += shift; });
-            top += shift;
-            bottom += shift;
-          }
-
-          cursor = bottom;
-        }
-      }
-    }
     const rootW = L._w || this.getNodeWidth(L);
     const depth1MinAbs = (p) => {
       const pw = p._w || 160;
@@ -471,10 +391,6 @@ class VietnameseCommunistPartyMindmap {
           .attr("y", d=>-this.getNodeHeight(d)/2)
           .attr("rx",10).attr("ry",10)
           .on("click",(e,d)=>this.handleNodeClick(e,d))
-          .on("dblclick", (e,d) => {
-            e.stopPropagation();
-            this.toggleNode(d);
-          })
           .on("mouseover",(e,d)=>this.showTooltip(e,d))
           .on("mouseout",()=>this.hideTooltip());
 
@@ -485,43 +401,6 @@ class VietnameseCommunistPartyMindmap {
           .style("font-size", d=>this.getTextSize(d))
           .style("pointer-events","none")
           .style("text-anchor","middle");
-
-        // Add expand/collapse indicator for nodes with children
-        if (d._children || d.children) {
-          const indicatorGroup = g.append("g")
-            .attr("class", "expand-indicator")
-            .style("cursor", "pointer")
-            .on("click", (e, node) => {
-              e.stopPropagation();
-              this.toggleNode(node);
-            });
-
-          indicatorGroup.append("circle")
-            .attr("r", 8)
-            .attr("cx", d => this.getNodeWidth(d)/2 - 12)
-            .attr("cy", 0)
-            .attr("fill", "#fff")
-            .attr("stroke", d => {
-              if (d.data.type === "event" || d.data.type === "detail") {
-                const periodClass = d.data.period ? d.data.period.split("-")[0] : "";
-                if (periodClass === "1930") return "#e74c3c";
-                if (periodClass === "1945") return "#3498db";
-                if (periodClass === "1975") return "#2ecc71";
-              }
-              return "#adb5bd";
-            })
-            .attr("stroke-width", 2);
-
-          indicatorGroup.append("text")
-            .attr("x", d => this.getNodeWidth(d)/2 - 12)
-            .attr("y", 0)
-            .attr("dy", "0.35em")
-            .attr("text-anchor", "middle")
-            .style("font-size", "12px")
-            .style("font-weight", "bold")
-            .style("pointer-events", "none")
-            .text(d => d.children ? "−" : "+");
-        }
       }
     });
 
@@ -550,32 +429,51 @@ class VietnameseCommunistPartyMindmap {
   /* -------------------- STYLE HELPERS -------------------- */
   getNodeClass(d) {
     const type = d.data.type;
-    let periodClass = "";
+    
+    // Gán class màu cho 6 nhánh chính
+    if (d.depth === 1 && d.data.id) {
+        return `node node-period-branch ${d.data.id}`; // e.g., "node-period-branch branch-1"
+    }
+    
+    let periodClass = "period-1975"; // Default
     if (d.data.period) {
       const startYear = parseInt(d.data.period.split("-")[0], 10);
       periodClass = startYear >= 1975 ? "period-1975" : `period-${startYear}`;
     }
 
-    // Add class for nodes with children (expandable/collapsible)
-    let expandClass = "";
-    if (d._children || d.children) {
-      expandClass = d.children ? "has-children expanded" : "has-children collapsed";
+    if (type === "central") return "node-central";
+    
+    // Lấy ID nhánh cha
+    let mainBranchId = "";
+    let temp = d;
+    while (temp.depth > 1 && temp.parent) {
+        temp = temp.parent;
+    }
+    if (temp.depth === 1 && temp.data.id) {
+        mainBranchId = temp.data.id; // e.g., "branch-1"
     }
 
-    if (type === "central") return "node-central";
-    if (type === "period")  return `node-period-${(d.data.period || "").split("-")[0]} ${expandClass}`;
-    if (type === "sub")     return `node-sub ${periodClass} ${expandClass}`;
-    if (type === "event")   return `node-event ${periodClass} ${expandClass}`;
-    if (type === "detail")  return `node-detail ${periodClass} ${expandClass}`;
-    if (type === "detail-item") return `node-detail-item ${periodClass}`;
-    return "node-default";
+    if (type === "period")  return `node-period-${(d.data.period || "1975-nay").split("-")[0]}`;
+    if (type === "sub")     return `node-sub ${periodClass} ${mainBranchId}`;
+    if (type === "event")   return `node-event ${periodClass} ${mainBranchId}`;
+    return `node-default ${mainBranchId}`;
   }
   getLinkClass(target) {
-    const period = target.data.period ? target.data.period.split("-")[0] : "";
-    if (target.data.type === "period") return `link period-${period}`;
-    if (target.data.type === "sub")    return `link-sub period-${period}`;
-    if (target.data.type === "event")  return `link-event period-${period}`;
-    return "link-default";
+    const period = target.data.period ? target.data.period.split("-")[0] : "1975";
+    
+    let mainBranchId = "";
+    let temp = target;
+    while (temp.depth > 1 && temp.parent) {
+        temp = temp.parent;
+    }
+    if (temp.depth === 1 && temp.data.id) {
+        mainBranchId = temp.data.id; // e.g., "branch-1"
+    }
+
+    if (target.data.type === "period") return `link period-${period} ${mainBranchId}`;
+    if (target.data.type === "sub")    return `link-sub period-${period} ${mainBranchId}`;
+    if (target.data.type === "event")  return `link-event period-${period} ${mainBranchId}`;
+    return `link-default ${mainBranchId}`;
   }
   getNodeWidth(d) {
     const text = this.getNodeText(d);
@@ -585,8 +483,6 @@ class VietnameseCommunistPartyMindmap {
       case "period":  return Math.max(160, base + 40);
       case "sub":     return Math.max(140, base + 30);
       case "event":   return Math.max(120, base + 24);
-      case "detail":  return Math.max(140, base + 30);
-      case "detail-item": return Math.max(180, base + 35);
       default:        return Math.max(140, base + 30);
     }
   }
@@ -596,8 +492,6 @@ class VietnameseCommunistPartyMindmap {
       case "period":  return 44;
       case "sub":     return 36;
       case "event":   return 32;
-      case "detail":  return 32;
-      case "detail-item": return 28;
       default:        return 36;
     }
   }
@@ -607,8 +501,6 @@ class VietnameseCommunistPartyMindmap {
       case "period":  return "13px";
       case "sub":     return "11px";
       case "event":   return "10px";
-      case "detail":  return "10px";
-      case "detail-item": return "9px";
       default:        return "11px";
     }
   }
@@ -650,16 +542,6 @@ class VietnameseCommunistPartyMindmap {
     const zl = document.getElementById("zoom-level");
     if (zl) zl.textContent = Math.round(e.transform.k * 100) + "%";
   }
-  zoomIn() {
-    this.svg.transition().duration(250).call(this.zoomBehavior.scaleBy, 1.2);
-  }
-  zoomOut() {
-    this.svg.transition().duration(250).call(this.zoomBehavior.scaleBy, 0.8);
-  }
-  resetView() {
-    this.svg.transition().duration(300).call(this.zoomBehavior.transform, d3.zoomIdentity);
-  }
-
   resize() {
     this.width = window.innerWidth;
     this.height = window.innerHeight - 60;
@@ -678,7 +560,7 @@ class VietnameseCommunistPartyMindmap {
     this.g.selectAll(".node-group").transition().duration(200)
       .style("opacity", (d) => {
         if (d.data.type === "central") return 1;
-        if (!d.data.period) return 1;
+        if (!d.data.period) return 1; // Luôn hiển thị nếu không có period
         return show.size === 0 || show.has(d.data.period.split("-")[0]) ? 1 : 0.06;
       });
     this.g.selectAll(".link").transition().duration(200)
@@ -690,236 +572,6 @@ class VietnameseCommunistPartyMindmap {
   }
 
   /* -------------------- TOOLTIP / DETAIL -------------------- */
-  toggleNode(node) {
-    if (node.children) {
-      // Collapse node
-      node._children = node.children;
-      node.children = null;
-      this.collapsedNodes.add(node.data.id);
-    } else if (node._children) {
-      // Expand node
-      node.children = node._children;
-      node._children = null;
-      this.collapsedNodes.delete(node.data.id);
-    }
-
-    // Update the visualization
-    this.update(node);
-  }
-
-  update() {
-    // Recompute hierarchy
-    this.root.each((d) => { d._w = this.getNodeWidth(d); d._h = this.getNodeHeight(d); });
-    this.computeLayoutPositions();
-
-    // Update nodes
-    const nodes = this.root.descendants().filter(d => d.data.id);
-
-    // Update node groups
-    this.nodeGroup = this.g.selectAll(".node-group").data(nodes, d => d.data.id);
-
-    // Remove exiting nodes
-    this.nodeGroup.exit()
-      .transition()
-      .duration(300)
-      .style("opacity", 0)
-      .remove();
-
-    // Update existing nodes
-    this.nodeGroup
-      .transition()
-      .duration(500)
-      .attr("transform", d => {
-        const p = this.pos.get(d.data.id);
-        return `translate(${p.y},${p.x})`;
-      });
-
-    // Update node classes (for expand/collapse state)
-    this.nodeGroup.selectAll(".node")
-      .attr("class", d => `node ${this.getNodeClass(d)}`);
-
-    // Update expand/collapse indicators
-    const that = this;
-    this.nodeGroup.each(function(d) {
-      const g = d3.select(this);
-      const indicator = g.select(".expand-indicator");
-
-      if (d._children || d.children) {
-        if (indicator.empty()) {
-          // Add indicator if it doesn't exist
-          const indicatorGroup = g.append("g")
-            .attr("class", "expand-indicator")
-            .style("cursor", "pointer")
-            .on("click", (e, node) => {
-              e.stopPropagation();
-              that.toggleNode(node);
-            });
-
-          indicatorGroup.append("circle")
-            .attr("r", 8)
-            .attr("cx", dd => that.getNodeWidth(dd)/2 - 12)
-            .attr("cy", 0)
-            .attr("fill", "#fff")
-            .attr("stroke", dd => {
-              if (dd.data.type === "event" || dd.data.type === "detail") {
-                const periodClass = dd.data.period ? dd.data.period.split("-")[0] : "";
-                if (periodClass === "1930") return "#e74c3c";
-                if (periodClass === "1945") return "#3498db";
-                if (periodClass === "1975") return "#2ecc71";
-              }
-              return "#adb5bd";
-            })
-            .attr("stroke-width", 2);
-
-          indicatorGroup.append("text")
-            .attr("x", dd => that.getNodeWidth(dd)/2 - 12)
-            .attr("y", 0)
-            .attr("dy", "0.35em")
-            .attr("text-anchor", "middle")
-            .style("font-size", "12px")
-            .style("font-weight", "bold")
-            .style("pointer-events", "none");
-        }
-        // Update indicator text
-        indicator.select("text").text(d.children ? "−" : "+");
-      } else {
-        // Remove indicator if node has no children
-        indicator.remove();
-      }
-    });
-
-    // Add new nodes
-    const enter = this.nodeGroup.enter().append("g")
-      .attr("class", "node-group")
-      .attr("transform", d => {
-        const parent = d.parent;
-        const p = parent ? this.pos.get(parent.data.id) : this.pos.get(d.data.id);
-        return `translate(${p.y},${p.x})`;
-      })
-      .style("opacity", 0)
-      .call(this.dragHandler());
-
-    // Add rect and text for new nodes
-    enter.each((d, i, arr) => {
-      const g = d3.select(arr[i]);
-      if (d.data.type !== "central") {
-        g.append("rect")
-          .attr("class", d => `node ${this.getNodeClass(d)}`)
-          .attr("width", d => this.getNodeWidth(d))
-          .attr("height", d => this.getNodeHeight(d))
-          .attr("x", d => -this.getNodeWidth(d)/2)
-          .attr("y", d => -this.getNodeHeight(d)/2)
-          .attr("rx", 10).attr("ry", 10)
-          .on("click", (e, d) => this.handleNodeClick(e, d))
-          .on("dblclick", (e, d) => {
-            e.stopPropagation();
-            this.toggleNode(d);
-          })
-          .on("mouseover", (e, d) => this.showTooltip(e, d))
-          .on("mouseout", () => this.hideTooltip());
-
-        g.append("text")
-          .attr("class", d => `node-text ${d.data.type}`)
-          .attr("dy", "0.35em")
-          .text(d => this.getNodeText(d))
-          .style("font-size", d => this.getTextSize(d))
-          .style("pointer-events", "none")
-          .style("text-anchor", "middle");
-
-        // Add expand/collapse indicator for nodes with children
-        if (d._children || d.children) {
-          const indicatorGroup = g.append("g")
-            .attr("class", "expand-indicator")
-            .style("cursor", "pointer")
-            .on("click", (e, d) => {
-              e.stopPropagation();
-              this.toggleNode(d);
-            });
-
-          indicatorGroup.append("circle")
-            .attr("r", 8)
-            .attr("cx", d => this.getNodeWidth(d)/2 - 12)
-            .attr("cy", 0)
-            .attr("fill", "#fff")
-            .attr("stroke", d => {
-              if (d.data.type === "event" || d.data.type === "detail") {
-                const periodClass = d.data.period ? d.data.period.split("-")[0] : "";
-                if (periodClass === "1930") return "#e74c3c";
-                if (periodClass === "1945") return "#3498db";
-                if (periodClass === "1975") return "#2ecc71";
-              }
-              return "#adb5bd";
-            })
-            .attr("stroke-width", 2);
-
-          indicatorGroup.append("text")
-            .attr("x", d => this.getNodeWidth(d)/2 - 12)
-            .attr("y", 0)
-            .attr("dy", "0.35em")
-            .attr("text-anchor", "middle")
-            .style("font-size", "12px")
-            .style("font-weight", "bold")
-            .style("pointer-events", "none")
-            .text(d => d.children ? "−" : "+");
-        }
-      }
-    });
-
-    // Animate new nodes
-    enter.transition()
-      .duration(500)
-      .style("opacity", 1)
-      .attr("transform", d => {
-        const p = this.pos.get(d.data.id);
-        return `translate(${p.y},${p.x})`;
-      });
-
-    this.nodeGroup = enter.merge(this.nodeGroup);
-
-    // Update links
-    this.updateLinks();
-  }
-
-  updateLinks() {
-    const links = this.root.descendants().slice(1).filter((d) => d.data && d.data.id)
-      .map((d) => ({ source: d.parent, target: d }));
-
-    this.linkGroup = this.g.selectAll(".link-group").data(links, (d) => d.target.data.id);
-
-    // Remove exiting links
-    this.linkGroup.exit()
-      .transition()
-      .duration(300)
-      .style("opacity", 0)
-      .remove();
-
-    // Update existing links
-    this.linkGroup.select("path")
-      .transition()
-      .duration(500)
-      .attr("d", (d) => this.createLinkPathElbow(d));
-
-    // Add new links
-    const gEnter = this.linkGroup.enter().append("g").attr("class", "link-group");
-
-    gEnter.append("path")
-      .attr("class", (d) => `link ${this.getLinkClass(d.target)}`)
-      .attr("d", (d) => {
-        const parent = d.source;
-        const p = this.pos.get(parent.data.id);
-        return `M${p.y},${p.x} L${p.y},${p.x}`;
-      })
-      .style("opacity", 0);
-
-    gEnter.select("path")
-      .transition()
-      .duration(500)
-      .style("opacity", 1)
-      .attr("d", (d) => this.createLinkPathElbow(d));
-
-    this.linkGroup = gEnter.merge(this.linkGroup);
-  }
-
   handleNodeClick(event, d) {
     if (event) event.stopPropagation();
     this.g.selectAll(".node").classed("selected", false);

@@ -43,4 +43,3 @@ async function getAIResponse(text) {
   const data = await response.json();
   return data.reply;
 }
-

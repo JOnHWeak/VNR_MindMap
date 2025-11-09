@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles/flag-silk.css">
     <link rel="stylesheet" href="styles/title-card.css">
-        <link rel="stylesheet" href="styles/aiChatbox.css">
+    <link rel="stylesheet" href="styles/aiChatbox.css">
 </head>
 <body>
     <!-- Loading Screen -->
@@ -65,24 +65,6 @@
                     <i class="fas fa-minus"></i>
                 </button>
             </div>
-
-            <div class="timeline-filter">
-                <h4>Giai đoạn</h4>
-                <div class="filter-options">
-                    <label class="filter-option">
-                        <input type="checkbox" checked data-period="1930-1945">
-                        <span class="period-1930">1930-1945</span>
-                    </label>
-                    <label class="filter-option">
-                        <input type="checkbox" checked data-period="1945-1975">
-                        <span class="period-1945">1945-1975</span>
-                    </label>
-                    <label class="filter-option">
-                        <input type="checkbox" checked data-period="1975-nay">
-                        <span class="period-1975">1975-nay</span>
-                    </label>
-                </div>
-            </div>
         </div>
 
         <!-- Detail Panel -->
@@ -99,21 +81,20 @@
                 </div>
             </div>
         </div>
+        <div id="chat-toggle">💬</div>
 
-              <div id="chat-toggle">💬</div>
-
-    <!-- Chatbox -->
-    <div class="chat-container hidden" id="chatbox">
-      <div class="chat-header">
-        <span>AI Assistant</span>
-        <button id="closeChat">×</button>
-      </div>
-      <div class="chat-body" id="chatlog"></div>
-      <div class="chat-input">
-        <input type="text" id="userInput" placeholder="Nhập tin nhắn..." />
-        <button id="sendBtn">➤</button>
-      </div>
-    </div>
+        <!-- Chatbox -->
+        <div class="chat-container hidden" id="chatbox">
+          <div class="chat-header">
+            <span>AI Assistant</span>
+            <button id="closeChat">×</button>
+          </div>
+          <div class="chat-body" id="chatlog"></div>
+          <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Nhập tin nhắn..." />
+            <button id="sendBtn">➤</button>
+          </div>
+        </div>
     </main>
         <!-- Floating Search Bar -->
         <div class="search-container floating">
@@ -138,12 +119,10 @@
 
                 <h4>Cách sử dụng:</h4>
                 <ul>
-                    <li><strong>Click 1 lần</strong> vào các node để xem thông tin tóm tắt</li>
-                    <li><strong>Double click (nhấp đúp)</strong> vào các node có biểu tượng +/− để mở rộng/thu gọn chi tiết</li>
+                    <li>Click vào các nút để xem thông tin chi tiết</li>
                     <li>Kéo để di chuyển mindmap</li>
                     <li>Sử dụng nút zoom hoặc cuộn chuột để phóng to/thu nhỏ</li>
                     <li>Sử dụng bộ lọc để hiển thị từng giai đoạn</li>
-                    <li>Sử dụng thanh tìm kiếm để tìm sự kiện</li>
                 </ul>
 
                 <h4>Nguồn tham khảo:</h4>
@@ -156,7 +135,6 @@
         </div>
     </div>
 
-
     <!-- Scripts -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="js/data.js"></script>
@@ -165,6 +143,6 @@
     <script src="js/animations.js"></script>
     <script src="js/main.js"></script>
     <script src="js/aiChatbox.js"></script>
-    <script defer src="js/flag-silk.js"></script>
+    <script src="js/flag-silk.js"></script>
 </body>
 </html>
