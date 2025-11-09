@@ -1,4 +1,14 @@
-// mindmap.js — Adaptive layout cho 1975–nay + root cân giữa các giai đoạn + elbow links
+// mindmap.js — Mindmap + Adaptive layout (1975–nay), central TiltedCard, elbow links
+
+// ===== Cấu hình Tilt cho node trung tâm =====
+const CENTRAL_CARD = {
+  width: 260,        // px - sẽ được cập nhật theo ảnh
+  height: 64,        // px - sẽ được cập nhật theo ảnh
+  scaleOnHover: 1.06,
+  rotateAmplitude: 12 // độ nghiêng tối đa (độ)
+};
+const CENTRAL_IMG_SRC = "assets/LSDCSVN.png";
+const CENTRAL_SIZE = { MIN_W: 320, MAX_W: 520, MIN_H: 72 }; // biên an toàn (kéo ngang hơn để hợp 2 dòng)
 
 class VietnameseCommunistPartyMindmap {
   constructor(containerId, data) {
@@ -20,6 +30,33 @@ class VietnameseCommunistPartyMindmap {
     this.tooltip = d3.select("body").append("div").attr("class", "tooltip");
 
     this.root = d3.hierarchy(this.data);
+
+    // Tự scale card theo tỉ lệ ảnh trung tâm
+    const img = new Image();
+    img.onload = () => {
+      const ratio = img.naturalWidth / Math.max(1, img.naturalHeight);
+
+      // chọn width mục tiêu trong khoảng an toàn
+      const targetW = Math.max(
+        CENTRAL_SIZE.MIN_W,
+        Math.min(CENTRAL_SIZE.MAX_W, img.naturalWidth)
+      );
+      const targetH = Math.round(targetW / ratio);
+
+      CENTRAL_CARD.width  = targetW;
+      CENTRAL_CARD.height = Math.max(CENTRAL_SIZE.MIN_H, targetH);
+
+      // cập nhật kích thước node rồi layout lại
+      this.root.each((d) => { d._w = this.getNodeWidth(d); d._h = this.getNodeHeight(d); });
+      this.computeLayoutPositions();
+
+      // render lại nhanh
+      this.g.selectAll("*").remove();
+      this.render();
+      this.animateEntrance();
+    };
+    img.src = CENTRAL_IMG_SRC;
+
     this.root.each((d) => { d._w = this.getNodeWidth(d); d._h = this.getNodeHeight(d); });
 
     this.computeLayoutPositions();
@@ -125,7 +162,6 @@ class VietnameseCommunistPartyMindmap {
     if (p1945) spreadChildrenAdaptive(p1945, rootX0 + periodYOffset, baseChildGap);
 
     // 1975–nay: adaptive theo số lượng con
-    // 1975–nay: adaptive theo số lượng con
     if (p1975) {
       const n = (p1975.children || []).length || 1;
       const avail = (this.height - edgeTop - edgeBot);
@@ -133,21 +169,17 @@ class VietnameseCommunistPartyMindmap {
       // Nếu chỉ có 2 nhánh lớn -> tách mạnh tay để không chồng vùng cháu
       let desired;
       if (n <= 2) {
-        // trải 65% chiều cao khả dụng, nhưng không dưới 220 và không quá 320
         desired = Math.max(220, Math.min(320, avail * 0.65));
       } else {
-        // nhiều hơn 2 nhánh thì chia đều, nhưng vẫn giới hạn để không quá thưa
-        desired = Math.min(140, Math.max(90, avail / (n - 1)));
+        desired = Math.min(140, Math.max(90, avail / Math.max(2, n - 1)));
       }
       spreadChildrenAdaptive(p1975, rootX0, baseChildGap, desired);
     }
 
     // ---- dàn đều cháu (depth=2) ----
-    // ---- dàn đều cháu (depth=2) ----
     const depth2Nodes = L.descendants().filter(
       (d) => d.depth === 2 && d.children && d.children.length
     );
-
     const within1975Gap = 54; // gap cháu cho 1975–nay (hẹp gọn)
 
     // 1) Xử lý riêng cụm 1975–nay: dịch 2 nhánh lớn lên/xuống 3 bước
@@ -156,25 +188,20 @@ class VietnameseCommunistPartyMindmap {
     );
 
     if (p1975Node) {
-      // lấy 2 nhánh lớn (depth=2) của 1975–nay
       const bigKids = (p1975Node.children || []).filter(
         (c) => c.depth === 2 && c.children && c.children.length
       );
 
       if (bigKids.length >= 2) {
-        // Xác định nhánh "trên" và "dưới" theo trục dọc X
         bigKids.sort((a, b) => a.x - b.x);
         const topKid = bigKids[0];
         const bottomKid = bigKids[1];
 
-        // neo mới: đẩy trên lên 3 bước, dưới xuống 3 bước
-        const offset = within1975Gap * 3;
+        const offset = within1975Gap * 3; // đẩy 3 bậc
 
-        // dàn cháu quanh neo mới
         spreadChildrenAdaptive(topKid, topKid.x - offset, within1975Gap);
         spreadChildrenAdaptive(bottomKid, bottomKid.x + offset, within1975Gap);
 
-        // loại 2 nhánh này khỏi vòng lặp chung (tránh dàn lần 2)
         const skipIds = new Set([topKid.data.id, bottomKid.data.id]);
         for (const n of depth2Nodes) {
           if (skipIds.has(n.data.id)) continue;
@@ -184,7 +211,6 @@ class VietnameseCommunistPartyMindmap {
           spreadChildrenAdaptive(n, n.x, gapForThis);
         }
       } else {
-        // chỉ có 1 nhánh lớn => xử lý mặc định
         for (const n of depth2Nodes) {
           const topPeriod = this.getTopPeriodNode(n);
           const is1975 = topPeriod && (this.periodStartYear(topPeriod) ?? 0) >= 1975;
@@ -193,7 +219,6 @@ class VietnameseCommunistPartyMindmap {
         }
       }
     } else {
-      // không có 1975–nay => mặc định
       for (const n of depth2Nodes) {
         const topPeriod = this.getTopPeriodNode(n);
         const is1975 = topPeriod && (this.periodStartYear(topPeriod) ?? 0) >= 1975;
@@ -201,7 +226,6 @@ class VietnameseCommunistPartyMindmap {
         spreadChildrenAdaptive(n, n.x, gapForThis);
       }
     }
-
 
     // ---- chống va chạm trong từng nhóm con cùng cha ----
     const padY = 10;
@@ -303,24 +327,123 @@ class VietnameseCommunistPartyMindmap {
       .call(this.dragHandler())
       .style("opacity", 0);
 
-    enter.append("rect")
-      .attr("class", (d) => `node ${this.getNodeClass(d)}`)
-      .attr("width", (d) => this.getNodeWidth(d))
-      .attr("height", (d) => this.getNodeHeight(d))
-      .attr("x", (d) => -this.getNodeWidth(d) / 2)
-      .attr("y", (d) => -this.getNodeHeight(d) / 2)
-      .attr("rx", 10).attr("ry", 10)
-      .on("click", (e, d) => this.handleNodeClick(e, d))
-      .on("mouseover", (e, d) => this.showTooltip(e, d))
-      .on("mouseout", () => this.hideTooltip());
+    const CFG = { width: CENTRAL_CARD.width, height: CENTRAL_CARD.height, scale: CENTRAL_CARD.scaleOnHover, amp: CENTRAL_CARD.rotateAmplitude };
 
-    enter.append("text")
-      .attr("class", (d) => `node-text ${d.data.type}`)
-      .attr("dy", "0.35em")
-      .text((d) => this.getNodeText(d))
-      .style("font-size", (d) => this.getTextSize(d))
-      .style("pointer-events", "none")
-      .style("text-anchor", "middle");
+    // util: ép 2 dòng cân nhau
+    function toTwoLinesBalanced(s) {
+      const words = (s || "").trim().split(/\s+/);
+      if (words.length <= 2) return s;
+      const total = words.length;
+      // tìm điểm cắt sao cho 2 nửa gần nhau nhất về độ dài ký tự
+      let best = 1, minDiff = Infinity;
+      for (let i = 1; i < total; i++) {
+        const left = words.slice(0, i).join(" ").length;
+        const right = words.slice(i).join(" ").length;
+        const diff = Math.abs(left - right);
+        if (diff < minDiff) { minDiff = diff; best = i; }
+      }
+      return `${words.slice(0, best).join(" ")}<br>${words.slice(best).join(" ")}`;
+    }
+
+    enter.each((d, i, nodesArr) => {
+      const g = d3.select(nodesArr[i]);
+
+      if (d.data.type === "central") {
+        // foreignObject để nhúng HTML
+        const fo = g.append("foreignObject")
+          .attr("x", -CFG.width / 2)
+          .attr("y", -CFG.height / 2)
+          .attr("width", CFG.width)
+          .attr("height", CFG.height)
+          .style("overflow", "visible");
+
+        const div = fo.append("xhtml:div")
+          .attr("class", "tilted-card-figure")
+          .style("width", CFG.width + "px")
+          .style("height", CFG.height + "px");
+
+        const inner = div.append("div")
+          .attr("class", "tilted-card-inner")
+          .style("width", CFG.width + "px")
+          .style("height", CFG.height + "px");
+
+        // Ảnh nền
+        inner.append("img")
+          .attr("class", "tilted-card-bg")
+          .attr("src", CENTRAL_IMG_SRC)
+          .attr("alt", "Lịch sử ĐCSVN");
+
+        // Tiêu đề 2 dòng duy nhất
+        inner.append("div")
+          .attr("class", "tilted-card-overlay")
+          .append("div")
+          .attr("class", "tilted-card-title two-lines")
+          .html(toTwoLinesBalanced(d.data.name || "Lịch sử Đảng Cộng sản Việt Nam"));
+
+        // Tilt (bỏ trên mobile)
+        let lastY = 0;
+        const amp = CFG.amp;
+        const scaleH = CFG.scale;
+        const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
+        function handleMove(ev) {
+          const rect = ev.currentTarget.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const offsetX = ev.clientX - cx;
+          const offsetY = ev.clientY - cy;
+
+          const rX = -(offsetY / (rect.height / 2)) * amp;
+          const rY = (offsetX / (rect.width / 2)) * amp;
+
+          ev.currentTarget.style.transform =
+            `rotateX(${rX}deg) rotateY(${rY}deg) scale(${scaleH})`;
+
+          const vY = offsetY - lastY;
+          const overlay = ev.currentTarget.querySelector(".tilted-card-overlay");
+          if (overlay) overlay.style.transform = `translateZ(30px) rotate(${(-vY * 0.6)}deg)`;
+          lastY = offsetY;
+        }
+
+        function handleEnter(ev) {
+          ev.currentTarget.style.transition = "transform 120ms ease";
+          ev.currentTarget.style.transform = `scale(${scaleH})`;
+        }
+        function handleLeave(ev) {
+          ev.currentTarget.style.transition = "transform 200ms ease";
+          ev.currentTarget.style.transform = "rotateX(0deg) rotateY(0deg) scale(1)";
+          const overlay = ev.currentTarget.querySelector(".tilted-card-overlay");
+          if (overlay) overlay.style.transform = "translateZ(30px) rotate(0deg)";
+        }
+
+        if (!isTouch) {
+          inner.on("mousemove", (ev) => handleMove(ev))
+               .on("mouseenter", (ev) => handleEnter(ev))
+               .on("mouseleave", (ev) => handleLeave(ev));
+        }
+
+      } else {
+        // ==== các node còn lại (rect + text) ====
+        g.append("rect")
+          .attr("class", (d) => `node ${this.getNodeClass(d)}`)
+          .attr("width", (d) => this.getNodeWidth(d))
+          .attr("height", (d) => this.getNodeHeight(d))
+          .attr("x", (d) => -this.getNodeWidth(d) / 2)
+          .attr("y", (d) => -this.getNodeHeight(d) / 2)
+          .attr("rx", 10).attr("ry", 10)
+          .on("click", (e, d) => this.handleNodeClick(e, d))
+          .on("mouseover", (e, d) => this.showTooltip(e, d))
+          .on("mouseout", () => this.hideTooltip());
+
+        g.append("text")
+          .attr("class", (d) => `node-text ${d.data.type}`)
+          .attr("dy", "0.35em")
+          .text((d) => this.getNodeText(d))
+          .style("font-size", (d) => this.getTextSize(d))
+          .style("pointer-events", "none")
+          .style("text-anchor", "middle");
+      }
+    });
 
     this.nodeGroup = enter.merge(this.nodeGroup);
   }
@@ -369,7 +492,7 @@ class VietnameseCommunistPartyMindmap {
     const text = this.getNodeText(d);
     const base = text.length * 8;
     switch (d.data.type) {
-      case "central": return Math.max(220, base + 60);
+      case "central": return CENTRAL_CARD.width;
       case "period":  return Math.max(160, base + 40);
       case "sub":     return Math.max(140, base + 30);
       case "event":   return Math.max(120, base + 24);
@@ -378,7 +501,7 @@ class VietnameseCommunistPartyMindmap {
   }
   getNodeHeight(d) {
     switch (d.data.type) {
-      case "central": return 56;
+      case "central": return CENTRAL_CARD.height;
       case "period":  return 44;
       case "sub":     return 36;
       case "event":   return 32;
