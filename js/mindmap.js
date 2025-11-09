@@ -1,545 +1,532 @@
-// mindmap.js
-// Mindmap rendering & interaction with robust non-overlap layout
-// - D3 tree layout + per-level collision resolution (1D dodge by rect height)
+// mindmap.js — Adaptive layout cho 1975–nay + root cân giữa các giai đoạn + elbow links
 
 class VietnameseCommunistPartyMindmap {
-    constructor(containerId, data) {
-      this.container = d3.select(containerId);
-      this.data = data;
-
-      this.width = window.innerWidth;
-      this.height = window.innerHeight - 60; // trừ header
-      this.currentZoom = 1;
-      this.selectedNode = null;
-
-      // SVG + group
-      this.svg = this.container
-        .append("svg")
-        .attr("id", "mindmap-svg")
-        .attr("width", this.width)
-        .attr("height", this.height)
-        .call(
-          d3
-            .zoom()
-            .scaleExtent([0.25, 3])
-            .on("zoom", (event) => this.handleZoom(event))
-        )
-        .on("click", () => this.deselectAll());
-
-      this.g = this.svg.append("g");
-
-      // Tooltip
-      this.tooltip = d3.select("body").append("div").attr("class", "tooltip");
-
-      // khởi tạo
-      this.init();
-    }
-
-    /* ====================== INIT & LAYOUT ====================== */
-    init() {
-      // dựng hierarchy để giữ parent/children cho interactions
-      this.root = d3.hierarchy(this.data);
-
-      // Precompute kích thước từng node (cho collision)
-      this.root.each((d) => {
-        d._w = this.getNodeWidth(d);
-        d._h = this.getNodeHeight(d);
-      });
-
-      // Tính layout + khử va chạm
-      this.computeLayoutPositions();
-
-      // Vẽ
-      this.render();
-
-      // Entrance animation (CSS keyframes + transition)
-      this.animateEntrance();
-    }
-
-    // Tạo layout không chồng lấn:
-    // 1) dùng d3.tree() cho toàn bộ cây
-    // 2) khử va chạm theo từng depth dựa trên chiều cao thực
-    computeLayoutPositions() {
-      // Tree cơ bản (hướng từ trái sang phải)
-      const levelGapX = 200; // Giảm khoảng cách theo trục X
-      const levelGapY = 70;  // Giảm khoảng cách dọc
-
-      const tree = d3
-        .tree()
-        .nodeSize([levelGapY, levelGapX])
-        .separation((a, b) => (a.parent === b.parent ? 1.1 : 1.6));
-
-      // Copy data để layout (không ảnh hưởng this.root)
-      const layoutRoot = d3.hierarchy(this.data);
-      layoutRoot.each((d) => {
-        d._w = this.getNodeWidth(d);
-        d._h = this.getNodeHeight(d);
-      });
-
-      tree(layoutRoot);
-
-      // Sau khi tree layout xong, x = dọc, y = ngang (tăng dần theo depth)
-      // Khử va chạm theo từng depth: sort theo x, đảm bảo khoảng trống >= (h1/2 + h2/2 + padding)
-      const byDepth = d3.group(layoutRoot.descendants(), (d) => d.depth);
-      const padY = 12;
-
-      for (const [depth, nodes] of byDepth) {
-        // root (depth 0) bỏ qua
-        if (depth === 0) continue;
-
-        // sắp theo x tăng dần
-        nodes.sort((a, b) => a.x - b.x);
-
-        let lastBottom = -Infinity;
-        for (const n of nodes) {
-          const half = (n._h || 30) / 2;
-          const minX = lastBottom + padY + half;
-          if (n.x < minX) n.x = minX;
-          lastBottom = n.x + half;
-        }
-
-        // cân giữa lại cụm level để đỡ bị dồn về 1 phía
-        const minX = d3.min(nodes, (n) => n.x - (n._h || 30) / 2);
-        const maxX = d3.max(nodes, (n) => n.x + (n._h || 30) / 2);
-        const mid = (minX + maxX) / 2;
-        const targetMid = d3.mean(nodes, (n) => n.x);
-        const shift = targetMid - mid; // nhỏ, chủ yếu để nhìn đều
-        nodes.forEach((n) => (n.x += shift));
-      }
-
-      // Chuẩn hóa toạ độ vào giữa canvas
-      const centerX = this.width / 2;
-      const centerY = this.height / 2;
-
-      // Tạo map id -> {x,y} để render theo this.root (bảo toàn parent/children)
-      this.pos = new Map();
-      layoutRoot.each((n) => {
-        // Căn giữa theo canvas (root ở giữa theo chiều dọc, chiều ngang căn trái/giữa tuỳ depth)
-        const X = centerY + n.x; // dọc
-        const Y = centerX - 140 + n.y; // đẩy khối sang phải một chút cho dễ nhìn
-        this.pos.set(n.data.id, { x: X, y: Y });
-      });
-
-      // Đảm bảo root đúng giữa (ghi đè)
-      this.pos.set(this.root.data.id, { x: centerY, y: centerX });
-    }
-
-    /* ====================== RENDER ====================== */
-    render() {
-      this.renderLinks();
-      this.renderNodes();
-    }
-
-    renderLinks() {
-      // Tạo danh sách link dựa trên this.root (để còn parent/children)
-      const linksData = this.root
-        .descendants()
-        .slice(1)
-        .filter(d => d.data && d.data.id) // Lọc các node không hợp lệ
-        .map((d) => ({ source: d.parent, target: d }));
-
-      this.linkGroup = this.g
-        .selectAll(".link-group")
-        .data(linksData, (d) => d.target.data.id);
-
-      const gEnter = this.linkGroup.enter().append("g").attr("class", "link-group");
-
-      gEnter
-        .append("path")
-        .attr("class", (d) => `link ${this.getLinkClass(d.target)}`)
-        .attr("d", (d) => this.createLinkPath(d))
-        .style("stroke-dasharray", "1000")
-        .style("stroke-dashoffset", "1000");
-
-      this.linkGroup = gEnter.merge(this.linkGroup);
-    }
-
-    renderNodes() {
-      const nodes = this.root.descendants().filter(d => d.data.id);
-
-      this.nodeGroup = this.g
-        .selectAll(".node-group")
-        .data(nodes, (d) => d.data.id);
-
-      const enter = this.nodeGroup
-        .enter()
-        .append("g")
-        .attr("class", "node-group")
-        .attr("transform", (d) => {
-          const p = this.pos.get(d.data.id);
-          return `translate(${p.y},${p.x})`;
-        })
-        .call(this.dragHandler())
-        .style("opacity", 0);
-
-      // rect
-      enter
-        .append("rect")
-        .attr("class", (d) => `node ${this.getNodeClass(d)}`)
-        .attr("width", (d) => this.getNodeWidth(d))
-        .attr("height", (d) => this.getNodeHeight(d))
-        .attr("x", (d) => -this.getNodeWidth(d) / 2)
-        .attr("y", (d) => -this.getNodeHeight(d) / 2)
-        .attr("rx", 10)
-        .attr("ry", 10)
-        .on("click", (event, d) => this.handleNodeClick(event, d))
-        .on("mouseover", (event, d) => this.showTooltip(event, d))
-        .on("mouseout", () => this.hideTooltip());
-
-      // văn bản
-      enter
-        .append("text")
-        .attr("class", (d) => `node-text ${d.data.type}`)
-        .attr("dy", "0.35em")
-        .text((d) => this.getNodeText(d))
-        .style("font-size", (d) => this.getTextSize(d))
-        .style("pointer-events", "none")
-        .style("text-anchor", "middle");
-
-
-
-      this.nodeGroup = enter.merge(this.nodeGroup);
-    }
-
-    /* ====================== DRAG HANDLER ====================== */
-    dragHandler() {
-        const that = this;
-
-        function dragstarted() {
-            d3.select(this).raise();
-            that.g.attr("cursor", "grabbing");
-        }
-
-        function dragged(event, d) {
-            const p = that.pos.get(d.data.id);
-            p.x += event.dy;
-            p.y += event.dx;
-            d3.select(this).attr("transform", `translate(${p.y},${p.x})`);
-            that.updateLinksForNode(d);
-        }
-
-        function dragended() {
-            that.g.attr("cursor", "grab");
-        }
-
-        return d3.drag()
-            .on("start", dragstarted)
-            .on("drag", dragged)
-            .on("end", dragended);
-    }
-
-    updateLinksForNode(node) {
-        const that = this;
-        this.linkGroup.selectAll('path')
-            .filter(l => l.source.data.id === node.data.id || l.target.data.id === node.data.id)
-            .attr('d', d => that.createLinkPath(d));
-    }
-
-    /* ====================== HELPERS (SIZE/TEXT/CLASS) ====================== */
-    getNodeClass(d) {
-      const type = d.data.type;
-      let periodClass = "";
-      if (d.data.period) {
-        const startYear = parseInt(d.data.period.split("-")[0], 10);
-        if (startYear >= 1975) {
-          periodClass = "period-1975";
-        } else {
-          periodClass = `period-${startYear}`;
-        }
-      }
-
-      if (type === "central") return "node-central";
-      if (type === "period") return `node-period-${d.data.period.split("-")[0]}`;
-      if (type === "sub") return `node-sub ${periodClass}`;
-      if (type === "event") return `node-event ${periodClass}`;
-      return "node-default";
-    }
-
-    getLinkClass(targetNode) {
-      const period = targetNode.data.period ? targetNode.data.period.split("-")[0] : "";
-      if (targetNode.data.type === "period") return `link period-${period}`;
-      if (targetNode.data.type === "sub") return `link-sub period-${period}`;
-      if (targetNode.data.type === "event") return `link-event period-${period}`;
-      return "link-default";
-    }
-
-    // Ước lượng độ rộng theo số ký tự (nhanh & ổn định)
-    getNodeWidth(d) {
-      const text = this.getNodeText(d);
-      const base = text.length * 8;
-      switch (d.data.type) {
-        case "central":
-          return Math.max(220, base + 60);
-        case "period":
-          return Math.max(160, base + 40);
-        case "sub":
-          return Math.max(140, base + 30);
-        case "event":
-          return Math.max(120, base + 24);
-        default:
-          return Math.max(140, base + 30);
-      }
-    }
-
-    getNodeHeight(d) {
-      switch (d.data.type) {
-        case "central":
-          return 56;
-        case "period":
-          return 44;
-        case "sub":
-          return 36;
-        case "event":
-          return 32;
-        default:
-          return 36;
-      }
-    }
-
-    getTextSize(d) {
-      switch (d.data.type) {
-        case "central":
-          return "16px";
-        case "period":
-          return "13px";
-        case "sub":
-          return "11px";
-        case "event":
-          return "10px";
-        default:
-          return "11px";
-      }
-    }
-
-        getNodeText(d) {
-      if (!d.data.name) {
-        return ''; // Return an empty string if name is missing
-      }
-      if (d.data.type === "central") return d.data.name;
-      const limit = d.data.type === "period" ? 28 : 22;
-      return d.data.name.length > limit ? d.data.name.slice(0, limit) + "..." : d.data.name;
-    }
-
-
-
-    /* ====================== PATHS & ANIMATIONS ====================== */
-    createLinkPath(d) {
-      // Lấy toạ độ đã khử va chạm từ map this.pos
-      const s = this.pos.get(d.source.data.id);
-      const t = this.pos.get(d.target.data.id);
-
-      const sx = s.y,
-        sy = s.x;
-      const tx = t.y,
-        ty = t.x;
-
-      // đường cong nhẹ
-      const mx = (sx + tx) / 2;
-      const my = (sy + ty) / 2;
-      return `M${sx},${sy}Q${mx},${my} ${tx},${ty}`;
-    }
-
-    animateEntrance() {
-      this.nodeGroup
-        .transition()
-        .delay((_, i) => i * 60)
-        .duration(600)
-        .style("opacity", 1)
-        .attr("transform", (d) => {
-          const p = this.pos.get(d.data.id);
-          return `translate(${p.y},${p.x})`;
-        });
-
-      this.linkGroup
-        .selectAll(".link")
-        .transition()
-        .delay((_, i) => i * 40 + 150)
-        .duration(800)
-        .style("stroke-dashoffset", "0");
-    }
-
-    /* ====================== INTERACTIONS ====================== */
-    handleNodeClick(event, d) {
-      if (event) event.stopPropagation();
-
-      this.g.selectAll(".node").classed("selected", false);
-      // target có thể là text/rect => lấy group gần nhất
-      const g = d3.select(event?.currentTarget?.parentNode || event?.target?.parentNode);
-      g.select(".node").classed("selected", true);
-
-      this.selectedNode = d;
-
-      // hiển thị panel
-      this.showDetailPanel(d);
-
-      // highlight liên kết
-      this.highlightConnections(d);
-    }
-
-    highlightConnections(node) {
-      this.g.selectAll(".node").classed("dimmed", true).classed("highlighted", false);
-      this.g.selectAll(".link").classed("dimmed", true).classed("highlighted", false);
-
-      const set = new Set([node]);
-      if (node.parent) set.add(node.parent);
-      if (node.children) node.children.forEach((c) => set.add(c));
-
-      this.g
-        .selectAll(".node-group")
-        .classed("highlighted", (d) => set.has(d))
-        .classed("dimmed", (d) => !set.has(d));
-
-      this.g
-        .selectAll(".link")
-        .classed("highlighted", (d) => set.has(d.source) && set.has(d.target))
-        .classed("dimmed", (d) => !(set.has(d.source) && set.has(d.target)));
-    }
-
-    deselectAll() {
-      this.g.selectAll(".node").classed("selected", false);
-      this.g.selectAll(".node-group").classed("dimmed", false).classed("highlighted", false);
-      this.g.selectAll(".link").classed("dimmed", false).classed("highlighted", false);
-      this.selectedNode = null;
-      this.hideDetailPanel();
-    }
-
-    showDetailPanel(nodeData) {
-      const panel = document.getElementById("detail-panel");
-      const title = document.getElementById("detail-title");
-      const body = document.getElementById("detail-body");
-
-      title.textContent = nodeData.data.name;
-
-      let html = "";
-      if (nodeData.data.content) {
-        const c = nodeData.data.content;
-        if (c.summary) html += `<h4>Tóm tắt</h4><p>${c.summary}</p>`;
-        if (c.images && c.images.length) {
-          html += "<h4>Hình ảnh</h4>";
-          c.images.forEach((img) => {
-            html += `<img src="${img.url}" alt="${img.caption}"><p><em>${img.caption || ""}</em></p>`;
-          });
-        }
-        if (c.videos && c.videos.length) {
-          html += "<h4>Video liên quan</h4>";
-          c.videos.forEach((v) => {
-            html += `<div class="video-container">
-                        <iframe src="https://www.youtube.com/embed/${v.id}" frameborder="0" allowfullscreen></iframe>
-                     </div>`;
-          });
-        }
-        if (c.citations && c.citations.length) {
-          html += "<h4>Nguồn tham khảo</h4>";
-          c.citations.forEach((ci) => (html += `<span class="citation">${ci}</span>`));
-        }
-      }
-      body.innerHTML = html || "<p>Đang cập nhật nội dung...</p>";
-      panel.classList.add("open");
-    }
-
-    hideDetailPanel() {
-      const panel = document.getElementById("detail-panel");
-      panel?.classList.remove("open");
-    }
-
-    showTooltip(event, d) {
-      this.tooltip
-        .style("opacity", 1)
-        .html(`<strong>${d.data.name}</strong><br>${d.data.description || ""}`)
-        .style("left", event.pageX + 10 + "px")
-        .style("top", event.pageY - 10 + "px");
-    }
-
-    hideTooltip() {
-      this.tooltip.style("opacity", 0);
-    }
-
-    /* ====================== ZOOM / RESIZE / FILTER ====================== */
-    handleZoom(event) {
-      this.g.attr("transform", event.transform);
-      this.currentZoom = event.transform.k;
-      const zl = document.getElementById("zoom-level");
-      if (zl) zl.textContent = Math.round(this.currentZoom * 100) + "%";
-    }
-
-    zoomIn() {
-      this.svg
-        .transition()
-        .duration(250)
-        .call(d3.zoom().scaleBy, 1.2);
-    }
-
-    zoomOut() {
-      this.svg
-        .transition()
-        .duration(250)
-        .call(d3.zoom().scaleBy, 0.8);
-    }
-
-    resetView() {
-      this.svg.transition().duration(300).call(d3.zoom().transform, d3.zoomIdentity);
-    }
-
-    resize() {
-      this.width = window.innerWidth;
-      this.height = window.innerHeight - 60;
-      this.svg.attr("width", this.width).attr("height", this.height);
-
-      // Tính lại layout & redraw
-      this.computeLayoutPositions();
-
-      // Cập nhật node
-      this.nodeGroup
-        .interrupt()
-        .transition()
-        .duration(300)
-        .attr("transform", (d) => {
-          const p = this.pos.get(d.data.id);
-          return `translate(${p.y},${p.x})`;
-        });
-
-      // Cập nhật link
-      this.linkGroup
-        .selectAll(".link")
-        .interrupt()
-        .transition()
-        .duration(300)
-        .attr("d", (d) => this.createLinkPath(d));
-    }
-
-    // Bật/tắt theo giai đoạn (được Interactions gọi)
-    filterByPeriod(periods) {
-      // nếu mảng rỗng => ẩn hết
-      const showSet = new Set(periods.map((p) => p.split("-")[0]));
-
-      // node
-      this.g
-        .selectAll(".node-group")
-        .transition()
-        .duration(200)
-        .style("opacity", (d) => {
-          if (d.data.type === "central") return 1;
-          if (!d.data.period) return 1;
-          return showSet.size === 0 || showSet.has(d.data.period.split("-")[0]) ? 1 : 0.06;
-        });
-
-      // link
-      this.g
-        .selectAll(".link")
-        .transition()
-        .duration(200)
-        .style("opacity", (d) => {
-          const tgt = d.target.data;
-          if (!tgt.period) return 1;
-          return showSet.size === 0 || showSet.has(tgt.period.split("-")[0]) ? 0.8 : 0.05;
-        });
-    }
+  constructor(containerId, data) {
+    this.container = d3.select(containerId);
+    this.data = data;
+
+    this.width = window.innerWidth;
+    this.height = window.innerHeight - 60;
+
+    this.svg = this.container
+      .append("svg")
+      .attr("id", "mindmap-svg")
+      .attr("width", this.width)
+      .attr("height", this.height)
+      .call(d3.zoom().scaleExtent([0.25, 3]).on("zoom", (e) => this.handleZoom(e)))
+      .on("click", () => this.deselectAll());
+
+    this.g = this.svg.append("g");
+    this.tooltip = d3.select("body").append("div").attr("class", "tooltip");
+
+    this.root = d3.hierarchy(this.data);
+    this.root.each((d) => { d._w = this.getNodeWidth(d); d._h = this.getNodeHeight(d); });
+
+    this.computeLayoutPositions();
+    this.render();
+    this.animateEntrance();
+
+    window.addEventListener("resize", () => this.resize());
   }
 
-  // Utils có thể cần ngoài class
-  const InteractionUtils = {
-    isTouch() {
-      return "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    },
-  };
+  /* ----------- helpers xác định giai đoạn / bên ----------- */
+  getTopPeriodNode(node) {
+    if (node.depth === 0) return null;
+    let a = node;
+    while (a.parent && a.depth > 1 && a.data?.type !== "period") a = a.parent;
+    return a;
+  }
+  periodStartYear(node) {
+    const p = (node.data?.period || "").split("-")[0];
+    const n = parseInt(p, 10);
+    return Number.isFinite(n) ? n : null;
+  }
+  sideOf(node) {
+    if (node.depth === 0) return 0;
+    const anc = this.getTopPeriodNode(node);
+    const start = anc ? this.periodStartYear(anc) : null;
+    if (start != null) return start >= 1975 ? +1 : -1; // 1975+ => phải
+    const label = (anc?.data?.title || anc?.data?.name || anc?.data?.period || "").toLowerCase();
+    if (label.includes("1975")) return +1;
+    return -1;
+  }
 
+  /* -------------------- LAYOUT -------------------- */
+  computeLayoutPositions() {
+    // Tham số
+    const levelGapX = 220;      // khoảng cách ngang cơ sở d3.tree
+    const levelGapY = 70;       // khoảng cách dọc cơ sở
+    const baseChildGap = 90;    // gap dọc tối thiểu giữa con
+    const baseGrandGap = 60;    // gap dọc tối thiểu giữa cháu
+    const periodYOffset = 180;  // 1930 lên, 1945 xuống, 1975 ngang
+    const padBetweenRootAndPeriod = 36;
+    const padBetweenLevels = 56; // đệm ngang cha–con
+    const edgeTop = 120, edgeBot = 140; // lề trên/dưới vùng dàn trải 1975–nay
+
+    const tree = d3.tree()
+      .nodeSize([levelGapY, levelGapX])
+      .separation((a, b) => (a.parent === b.parent ? 1.1 : 1.6));
+
+    // Làm layout trên bản sao để tính toán
+    const L = d3.hierarchy(this.data);
+    L.each((d) => { d._w = this.getNodeWidth(d); d._h = this.getNodeHeight(d); });
+
+    // Con root: TRÁI trước, PHẢI sau
+    if (L.children?.length) {
+      L.children.sort((a, b) => {
+        const sa = this.sideOf(a);
+        const sb = this.sideOf(b);
+        if (sa !== sb) return sa - sb;
+        const na = (a.data.title || a.data.name || "") + "";
+        const nb = (b.data.title || b.data.name || "") + "";
+        return na.localeCompare(nb, "vi");
+      });
+    }
+
+    tree(L); // layout gốc
+
+    // ---- dàn đều con quanh anchor (gap động theo chiều cao) ----
+    const parseYearFromName = (s) => {
+      const m = (s || "").match(/(19|20)\d{2}/);
+      return m ? parseInt(m[0], 10) : null;
+    };
+    const spreadChildrenAdaptive = (parent, anchorY, baseGap, explicitGap) => {
+      const kids = parent.children || [];
+      if (!kids.length) { parent.x = anchorY; return; }
+
+      kids.sort((a, b) => {
+        const oa = a.data.order ?? null, ob = b.data.order ?? null;
+        if (oa != null && ob != null && oa !== ob) return oa - ob;
+        const ya = parseYearFromName(a.data.name), yb = parseYearFromName(b.data.name);
+        if (ya != null && yb != null && ya !== yb) return ya - yb;
+        return (a.data.name || "").localeCompare(b.data.name || "", "vi");
+      });
+
+      const maxH = d3.max(kids, (k) => k._h || 30) || 30;
+      const gap = explicitGap ?? Math.max(baseGap, maxH + 28);
+      const n = kids.length;
+      const start = -(n - 1) / 2;
+      for (let i = 0; i < n; i++) kids[i].x = anchorY + (start + i) * gap;
+      parent.x = d3.mean(kids, (k) => k.x); // cha đứng giữa
+    };
+
+    // ---- đặt anchor cho 3 giai đoạn ----
+    const rootX0 = L.x;
+    const periods = (L.children || []).filter((d) => d.data?.type === "period");
+    let p1930 = null, p1945 = null, p1975 = null;
+    for (const p of periods) {
+      const start = this.periodStartYear(p);
+      if (start === 1930) p1930 = p;
+      else if (start === 1945) p1945 = p;
+      else if (start >= 1975) p1975 = p;
+    }
+    // 1930: trên, 1945: dưới
+    if (p1930) spreadChildrenAdaptive(p1930, rootX0 - periodYOffset, baseChildGap);
+    if (p1945) spreadChildrenAdaptive(p1945, rootX0 + periodYOffset, baseChildGap);
+
+    // 1975–nay: adaptive theo số lượng con
+    // 1975–nay: adaptive theo số lượng con
+    if (p1975) {
+      const n = (p1975.children || []).length || 1;
+      const avail = (this.height - edgeTop - edgeBot);
+
+      // Nếu chỉ có 2 nhánh lớn -> tách mạnh tay để không chồng vùng cháu
+      let desired;
+      if (n <= 2) {
+        // trải 65% chiều cao khả dụng, nhưng không dưới 220 và không quá 320
+        desired = Math.max(220, Math.min(320, avail * 0.65));
+      } else {
+        // nhiều hơn 2 nhánh thì chia đều, nhưng vẫn giới hạn để không quá thưa
+        desired = Math.min(140, Math.max(90, avail / (n - 1)));
+      }
+      spreadChildrenAdaptive(p1975, rootX0, baseChildGap, desired);
+    }
+
+    // ---- dàn đều cháu (depth=2) ----
+    // ---- dàn đều cháu (depth=2) ----
+    const depth2Nodes = L.descendants().filter(
+      (d) => d.depth === 2 && d.children && d.children.length
+    );
+
+    const within1975Gap = 54; // gap cháu cho 1975–nay (hẹp gọn)
+
+    // 1) Xử lý riêng cụm 1975–nay: dịch 2 nhánh lớn lên/xuống 3 bước
+    const p1975Node = (L.children || []).find(
+      (c) => (this.periodStartYear(c) ?? 0) >= 1975
+    );
+
+    if (p1975Node) {
+      // lấy 2 nhánh lớn (depth=2) của 1975–nay
+      const bigKids = (p1975Node.children || []).filter(
+        (c) => c.depth === 2 && c.children && c.children.length
+      );
+
+      if (bigKids.length >= 2) {
+        // Xác định nhánh "trên" và "dưới" theo trục dọc X
+        bigKids.sort((a, b) => a.x - b.x);
+        const topKid = bigKids[0];
+        const bottomKid = bigKids[1];
+
+        // neo mới: đẩy trên lên 3 bước, dưới xuống 3 bước
+        const offset = within1975Gap * 3;
+
+        // dàn cháu quanh neo mới
+        spreadChildrenAdaptive(topKid, topKid.x - offset, within1975Gap);
+        spreadChildrenAdaptive(bottomKid, bottomKid.x + offset, within1975Gap);
+
+        // loại 2 nhánh này khỏi vòng lặp chung (tránh dàn lần 2)
+        const skipIds = new Set([topKid.data.id, bottomKid.data.id]);
+        for (const n of depth2Nodes) {
+          if (skipIds.has(n.data.id)) continue;
+          const topPeriod = this.getTopPeriodNode(n);
+          const is1975 = topPeriod && (this.periodStartYear(topPeriod) ?? 0) >= 1975;
+          const gapForThis = is1975 ? within1975Gap : baseGrandGap;
+          spreadChildrenAdaptive(n, n.x, gapForThis);
+        }
+      } else {
+        // chỉ có 1 nhánh lớn => xử lý mặc định
+        for (const n of depth2Nodes) {
+          const topPeriod = this.getTopPeriodNode(n);
+          const is1975 = topPeriod && (this.periodStartYear(topPeriod) ?? 0) >= 1975;
+          const gapForThis = is1975 ? within1975Gap : baseGrandGap;
+          spreadChildrenAdaptive(n, n.x, gapForThis);
+        }
+      }
+    } else {
+      // không có 1975–nay => mặc định
+      for (const n of depth2Nodes) {
+        const topPeriod = this.getTopPeriodNode(n);
+        const is1975 = topPeriod && (this.periodStartYear(topPeriod) ?? 0) >= 1975;
+        const gapForThis = is1975 ? within1975Gap : baseGrandGap;
+        spreadChildrenAdaptive(n, n.x, gapForThis);
+      }
+    }
+
+
+    // ---- chống va chạm trong từng nhóm con cùng cha ----
+    const padY = 10;
+    const groupsByParent = d3.group(L.descendants().filter(d => d.parent), d => d.parent.data.id);
+    for (const [, kids] of groupsByParent) {
+      kids.sort((a, b) => a.x - b.x);
+      let last = -Infinity;
+      for (const k of kids) {
+        const half = (k._h || 30) / 2;
+        const minX = last + padY + half;
+        if (k.x < minX) k.x = minX;
+        last = k.x + half;
+      }
+      const parent = kids[0].parent;
+      const mid = d3.mean(kids, (k) => k.x);
+      const shift = parent.x - mid;
+      kids.forEach((k) => (k.x += shift));
+    }
+
+    // ---- tính khoảng cách NGANG tuyệt đối (né dính theo bề rộng) ----
+    const rootW = L._w || this.getNodeWidth(L);
+    const depth1MinAbs = (p) => {
+      const pw = p._w || 160;
+      const extra = 60; // nới hơn để thoáng mép
+      return (rootW / 2) + (pw / 2) + padBetweenRootAndPeriod + extra;
+    };
+
+    L.each((n) => { n._abs = Math.abs(n.y); });
+    L.each((n) => { if (n.depth === 1) n._abs = Math.max(n._abs, depth1MinAbs(n)); });
+
+    const nodesByDepth = d3.group(L.descendants(), (d) => d.depth);
+    const sortedDepths = Array.from(nodesByDepth.keys()).sort((a, b) => a - b);
+    for (const depth of sortedDepths) {
+      if (depth === 0) continue;
+      for (const n of nodesByDepth.get(depth)) {
+        const side = this.sideOf(n);
+        if (n.parent) {
+          const parentAbs = n.parent._abs || 0;
+          const need = (n.parent._w || 140) / 2 + (n._w || 120) / 2 + padBetweenLevels;
+          n._abs = Math.max(n._abs, parentAbs + need);
+        }
+        n._X = n.x;
+        n._Y = side === 0 ? 0 : n._abs * side;
+      }
+    }
+    // root tạm thời
+    L._X = L.x; L._Y = 0;
+
+    // ---- Đặt root đúng GIỮA CÁC GIAI ĐOẠN ----
+    const periodYs = periods.map((p) => p._X);
+    const midOfPeriods = periodYs.length ? (d3.min(periodYs) + d3.max(periodYs)) / 2 : 0;
+    const globalShift = -midOfPeriods; // dịch toàn bộ để root nằm giữa
+    L.each((n) => { n._X = (n._X ?? 0) + globalShift; });
+    L._X = (L._X ?? 0) + globalShift; // root = 0 sau recenter
+
+    // ---- Lưu vị trí cuối cùng (đặt giữa canvas) ----
+    const cx = this.width / 2;
+    const cy = this.height / 2;
+    this.pos = new Map();
+    L.each((n) => {
+      if (!n.data || typeof n.data.id === "undefined") return;
+      this.pos.set(n.data.id, { x: cy + n._X, y: cx + n._Y });
+    });
+    if (this.root?.data?.id) this.pos.set(this.root.data.id, { x: cy, y: cx }); // root giữa canvas
+  }
+
+  /* -------------------- RENDER -------------------- */
+  render() {
+    this.renderLinks();
+    this.renderNodes();
+  }
+
+  renderLinks() {
+    const links = this.root.descendants().slice(1).filter((d) => d.data && d.data.id)
+      .map((d) => ({ source: d.parent, target: d }));
+
+    this.linkGroup = this.g.selectAll(".link-group").data(links, (d) => d.target.data.id);
+    const gEnter = this.linkGroup.enter().append("g").attr("class", "link-group");
+
+    gEnter.append("path")
+      .attr("class", (d) => `link ${this.getLinkClass(d.target)}`)
+      .attr("d", (d) => this.createLinkPathElbow(d))
+      .style("stroke-dasharray", "1000")
+      .style("stroke-dashoffset", "1000");
+
+    this.linkGroup = gEnter.merge(this.linkGroup);
+  }
+
+  renderNodes() {
+    const nodes = this.root.descendants().filter((d) => d.data.id);
+    this.nodeGroup = this.g.selectAll(".node-group").data(nodes, (d) => d.data.id);
+
+    const enter = this.nodeGroup.enter().append("g")
+      .attr("class", "node-group")
+      .attr("transform", (d) => {
+        const p = this.pos.get(d.data.id);
+        return `translate(${p.y},${p.x})`;
+      })
+      .call(this.dragHandler())
+      .style("opacity", 0);
+
+    enter.append("rect")
+      .attr("class", (d) => `node ${this.getNodeClass(d)}`)
+      .attr("width", (d) => this.getNodeWidth(d))
+      .attr("height", (d) => this.getNodeHeight(d))
+      .attr("x", (d) => -this.getNodeWidth(d) / 2)
+      .attr("y", (d) => -this.getNodeHeight(d) / 2)
+      .attr("rx", 10).attr("ry", 10)
+      .on("click", (e, d) => this.handleNodeClick(e, d))
+      .on("mouseover", (e, d) => this.showTooltip(e, d))
+      .on("mouseout", () => this.hideTooltip());
+
+    enter.append("text")
+      .attr("class", (d) => `node-text ${d.data.type}`)
+      .attr("dy", "0.35em")
+      .text((d) => this.getNodeText(d))
+      .style("font-size", (d) => this.getTextSize(d))
+      .style("pointer-events", "none")
+      .style("text-anchor", "middle");
+
+    this.nodeGroup = enter.merge(this.nodeGroup);
+  }
+
+  /* -------------------- DRAG -------------------- */
+  dragHandler() {
+    const that = this;
+    function start() { d3.select(this).raise(); that.g.attr("cursor", "grabbing"); }
+    function drag(e, d) {
+      const p = that.pos.get(d.data.id);
+      p.x += e.dy; p.y += e.dx;
+      d3.select(this).attr("transform", `translate(${p.y},${p.x})`);
+      that.updateLinksForNode(d);
+    }
+    function end() { that.g.attr("cursor", "grab"); }
+    return d3.drag().on("start", start).on("drag", drag).on("end", end);
+  }
+  updateLinksForNode(node) {
+    this.linkGroup.selectAll("path")
+      .filter((l) => l.source.data.id === node.data.id || l.target.data.id === node.data.id)
+      .attr("d", (d) => this.createLinkPathElbow(d));
+  }
+
+  /* -------------------- STYLE HELPERS -------------------- */
+  getNodeClass(d) {
+    const type = d.data.type;
+    let periodClass = "";
+    if (d.data.period) {
+      const startYear = parseInt(d.data.period.split("-")[0], 10);
+      periodClass = startYear >= 1975 ? "period-1975" : `period-${startYear}`;
+    }
+    if (type === "central") return "node-central";
+    if (type === "period")  return `node-period-${(d.data.period || "").split("-")[0]}`;
+    if (type === "sub")     return `node-sub ${periodClass}`;
+    if (type === "event")   return `node-event ${periodClass}`;
+    return "node-default";
+  }
+  getLinkClass(target) {
+    const period = target.data.period ? target.data.period.split("-")[0] : "";
+    if (target.data.type === "period") return `link period-${period}`;
+    if (target.data.type === "sub")    return `link-sub period-${period}`;
+    if (target.data.type === "event")  return `link-event period-${period}`;
+    return "link-default";
+  }
+  getNodeWidth(d) {
+    const text = this.getNodeText(d);
+    const base = text.length * 8;
+    switch (d.data.type) {
+      case "central": return Math.max(220, base + 60);
+      case "period":  return Math.max(160, base + 40);
+      case "sub":     return Math.max(140, base + 30);
+      case "event":   return Math.max(120, base + 24);
+      default:        return Math.max(140, base + 30);
+    }
+  }
+  getNodeHeight(d) {
+    switch (d.data.type) {
+      case "central": return 56;
+      case "period":  return 44;
+      case "sub":     return 36;
+      case "event":   return 32;
+      default:        return 36;
+    }
+  }
+  getTextSize(d) {
+    switch (d.data.type) {
+      case "central": return "16px";
+      case "period":  return "13px";
+      case "sub":     return "11px";
+      case "event":   return "10px";
+      default:        return "11px";
+    }
+  }
+  getNodeText(d) {
+    const name = d.data.name || "";
+    if (d.data.type === "central") return name;
+    const limit = d.data.type === "period" ? 28 : 22;
+    return name.length > limit ? name.slice(0, limit) + "..." : name;
+  }
+
+  // Elbow-curve để tránh cắt qua ngôi sao & đỡ chồng chéo
+  createLinkPathElbow(d) {
+    const s = this.pos.get(d.source.data.id);
+    const t = this.pos.get(d.target.data.id);
+    const sx = s.y, sy = s.x, tx = t.y, ty = t.x;
+
+    const elbow = 60;            // chiều dài đoạn ngang trước khi bẻ
+    const dir = tx > sx ? 1 : -1; // phải/trái
+    const hx = sx + dir * elbow;
+
+    return `M${sx},${sy} C${hx},${sy} ${hx},${ty} ${tx},${ty}`;
+  }
+
+  /* -------------------- ANIM & UI -------------------- */
+  animateEntrance() {
+    this.nodeGroup
+      .transition().delay((_, i) => i * 60).duration(600)
+      .style("opacity", 1)
+      .attr("transform", (d) => {
+        const p = this.pos.get(d.data.id);
+        return `translate(${p.y},${p.x})`;
+      });
+    this.linkGroup.selectAll(".link")
+      .transition().delay((_, i) => i * 40 + 150).duration(800)
+      .style("stroke-dashoffset", "0");
+  }
+  handleZoom(e) {
+    this.g.attr("transform", e.transform);
+    const zl = document.getElementById("zoom-level");
+    if (zl) zl.textContent = Math.round(e.transform.k * 100) + "%";
+  }
+  resize() {
+    this.width = window.innerWidth;
+    this.height = window.innerHeight - 60;
+    this.svg.attr("width", this.width).attr("height", this.height);
+    this.computeLayoutPositions();
+    this.nodeGroup.transition().duration(300)
+      .attr("transform", (d) => {
+        const p = this.pos.get(d.data.id);
+        return `translate(${p.y},${p.x})`;
+      });
+    this.linkGroup.selectAll(".link").transition().duration(300)
+      .attr("d", (d) => this.createLinkPathElbow(d));
+  }
+  filterByPeriod(periods) {
+    const show = new Set(periods.map((p) => p.split("-")[0]));
+    this.g.selectAll(".node-group").transition().duration(200)
+      .style("opacity", (d) => {
+        if (d.data.type === "central") return 1;
+        if (!d.data.period) return 1;
+        return show.size === 0 || show.has(d.data.period.split("-")[0]) ? 1 : 0.06;
+      });
+    this.g.selectAll(".link").transition().duration(200)
+      .style("opacity", (d) => {
+        const tgt = d.target.data;
+        if (!tgt.period) return 1;
+        return show.size === 0 || show.has(tgt.period.split("-")[0]) ? 0.8 : 0.05;
+      });
+  }
+
+  /* -------------------- TOOLTIP / DETAIL -------------------- */
+  handleNodeClick(event, d) {
+    if (event) event.stopPropagation();
+    this.g.selectAll(".node").classed("selected", false);
+    const g = d3.select(event?.currentTarget?.parentNode || event?.target?.parentNode);
+    g.select(".node").classed("selected", true);
+    this.selectedNode = d;
+    this.showDetailPanel(d);
+    this.highlightConnections(d);
+  }
+  highlightConnections(node) {
+    this.g.selectAll(".node").classed("dimmed", true).classed("highlighted", false);
+    this.g.selectAll(".link").classed("dimmed", true).classed("highlighted", false);
+    const set = new Set([node]);
+    if (node.parent) set.add(node.parent);
+    (node.children || []).forEach((c) => set.add(c));
+    this.g.selectAll(".node-group")
+      .classed("highlighted", (d) => set.has(d))
+      .classed("dimmed",     (d) => !set.has(d));
+    this.g.selectAll(".link")
+      .classed("highlighted", (d) => set.has(d.source) && set.has(d.target))
+      .classed("dimmed",      (d) => !(set.has(d.source) && set.has(d.target)));
+  }
+  deselectAll() {
+    this.g.selectAll(".node").classed("selected", false);
+    this.g.selectAll(".node-group").classed("dimmed", false).classed("highlighted", false);
+    this.g.selectAll(".link").classed("dimmed", false).classed("highlighted", false);
+    this.selectedNode = null;
+    this.hideDetailPanel();
+  }
+  showDetailPanel(node) {
+    const panel = document.getElementById("detail-panel");
+    const title = document.getElementById("detail-title");
+    const body  = document.getElementById("detail-body");
+    if (title) title.textContent = node.data.name;
+
+    let html = "";
+    const c = node.data.content;
+    if (c?.summary) html += `<h4>Tóm tắt</h4><p>${c.summary}</p>`;
+    if (c?.images?.length) {
+      html += "<h4>Hình ảnh</h4>";
+      c.images.forEach((img) => html += `<img src="${img.url}" alt="${img.caption}"><p><em>${img.caption || ""}</em></p>`);
+    }
+    if (c?.videos?.length) {
+      html += "<h4>Video liên quan</h4>";
+      c.videos.forEach((v) => html += `<div class="video-container"><iframe src="https://www.youtube.com/embed/${v.id}" frameborder="0" allowfullscreen></iframe></div>`);
+    }
+    if (c?.citations?.length) {
+      html += "<h4>Nguồn tham khảo</h4>";
+      c.citations.forEach((ci) => (html += `<span class="citation">${ci}</span>`));
+    }
+    if (body) body.innerHTML = html || "<p>Đang cập nhật nội dung...</p>";
+    panel?.classList.add("open");
+  }
+  hideDetailPanel() { document.getElementById("detail-panel")?.classList.remove("open"); }
+  showTooltip(event, d) {
+    this.tooltip
+      .style("opacity", 1)
+      .html(`<strong>${d.data.name}</strong><br>${d.data.description || ""}`)
+      .style("left", event.pageX + 10 + "px")
+      .style("top", event.pageY - 10 + "px");
+  }
+  hideTooltip() { this.tooltip.style("opacity", 0); }
+}
+
+// Utils (nếu nơi khác có dùng)
+const InteractionUtils = {
+  isTouch() { return "ontouchstart" in window || navigator.maxTouchPoints > 0; },
+};
