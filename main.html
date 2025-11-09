@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles/flag-silk.css">
     <link rel="stylesheet" href="styles/title-card.css">
+    <link rel="stylesheet" href="styles/aiChatbox.css">
 </head>
 <body>
     <!-- Loading Screen -->
@@ -64,24 +65,6 @@
                     <i class="fas fa-minus"></i>
                 </button>
             </div>
-            
-            <div class="timeline-filter">
-                <h4>Giai đoạn</h4>
-                <div class="filter-options">
-                    <label class="filter-option">
-                        <input type="checkbox" checked data-period="1930-1945">
-                        <span class="period-1930">1930-1945</span>
-                    </label>
-                    <label class="filter-option">
-                        <input type="checkbox" checked data-period="1945-1975">
-                        <span class="period-1945">1945-1975</span>
-                    </label>
-                    <label class="filter-option">
-                        <input type="checkbox" checked data-period="1975-nay">
-                        <span class="period-1975">1975-nay</span>
-                    </label>
-                </div>
-            </div>
         </div>
 
         <!-- Detail Panel -->
@@ -98,7 +81,29 @@
                 </div>
             </div>
         </div>
+        <div id="chat-toggle">💬</div>
+
+        <!-- Chatbox -->
+        <div class="chat-container hidden" id="chatbox">
+          <div class="chat-header">
+            <span>AI Assistant</span>
+            <button id="closeChat">×</button>
+          </div>
+          <div class="chat-body" id="chatlog"></div>
+          <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Nhập tin nhắn..." />
+            <button id="sendBtn">➤</button>
+          </div>
+        </div>
     </main>
+        <!-- Floating Search Bar -->
+        <div class="search-container floating">
+            <input type="text" id="search-input" placeholder="Tìm kiếm sự kiện...">
+            <button id="search-btn" class="control-btn" title="Tìm kiếm">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+
 
     <!-- Info Modal -->
     <div id="info-modal" class="modal">
@@ -111,7 +116,7 @@
             </div>
             <div class="modal-body">
                 <p>Dự án "Dòng chảy Lịch sử Đảng Cộng sản Việt Nam" là một mindmap tương tác trình bày các giai đoạn phát triển quan trọng của Đảng từ 1930 đến nay.</p>
-                
+
                 <h4>Cách sử dụng:</h4>
                 <ul>
                     <li>Click vào các nút để xem thông tin chi tiết</li>
@@ -132,12 +137,12 @@
 
     <!-- Scripts -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
-        <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="js/data.js"></script>
     <script src="js/mindmap.js"></script>
     <script src="js/interactions.js"></script>
     <script src="js/animations.js"></script>
     <script src="js/main.js"></script>
-    <script defer src="js/flag-silk.js"></script>
+    <script src="js/aiChatbox.js"></script>
+    <script src="js/flag-silk.js"></script>
 </body>
 </html>

@@ -16,64 +16,102 @@
     dominant-baseline: central;
 }
 
-/* Period Nodes - Main Branches */
-.node-period-1930 {
-    fill: #e74c3c;
-    stroke: #c0392b;
-    stroke-width: 2px;
-    filter: drop-shadow(0 3px 6px rgba(231, 76, 60, 0.25));
-}
+/* === Bỏ các class 1930, 1945 === */
 
-.node-period-1945 {
-    fill: #3498db;
-    stroke: #2980b9;
-    stroke-width: 2px;
-    filter: drop-shadow(0 3px 6px rgba(52, 152, 219, 0.25));
-}
-
+/* Period Nodes - Gốc cho 1975 (Green) - Dùng làm default nếu ID nhánh bị sai */
 .node-period-1975 {
     fill: #2ecc71;
     stroke: #27ae60;
     stroke-width: 2px;
     filter: drop-shadow(0 3px 6px rgba(46, 204, 113, 0.25));
 }
+.node-sub.period-1975 {
+    stroke: #2ecc71;
+}
+.node-event.period-1975 {
+    stroke: #2ecc71;
+}
+.link.period-1975,
+.link-sub.period-1975,
+.link-event.period-1975 {
+    stroke: #2ecc71;
+}
 
-/* Sub-nodes */
+
+/* === 6 MÀU CHO 6 NHÁNH === */
+/* Áp dụng cho node nhánh chính (depth 1) */
+.node-period-branch {
+    stroke-width: 2px;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+}
+
+/* Nhánh 1: Red */
+.node-period-branch.branch-1 {
+    fill: #e74c3c;
+    stroke: #c0392b;
+}
+.node-sub.branch-1 { stroke: #e74c3c; }
+.node-event.branch-1 { stroke: #e74c3c; }
+.link.branch-1, .link-sub.branch-1, .link-event.branch-1 { stroke: #e74c3c; }
+
+/* Nhánh 2: Blue */
+.node-period-branch.branch-2 {
+    fill: #3498db;
+    stroke: #2980b9;
+}
+.node-sub.branch-2 { stroke: #3498db; }
+.node-event.branch-2 { stroke: #3498db; }
+.link.branch-2, .link-sub.branch-2, .link-event.branch-2 { stroke: #3498db; }
+
+/* Nhánh 3: Green (Giữ màu 1975) */
+.node-period-branch.branch-3 {
+    fill: #2ecc71;
+    stroke: #27ae60;
+}
+.node-sub.branch-3 { stroke: #2ecc71; }
+.node-event.branch-3 { stroke: #2ecc71; }
+.link.branch-3, .link-sub.branch-3, .link-event.branch-3 { stroke: #2ecc71; }
+
+/* Nhánh 4: Yellow/Gold */
+.node-period-branch.branch-4 {
+    fill: #f1c40f;
+    stroke: #f39c12;
+}
+.node-sub.branch-4 { stroke: #f1c40f; }
+.node-event.branch-4 { stroke: #f1c40f; }
+.link.branch-4, .link-sub.branch-4, .link-event.branch-4 { stroke: #f1c40f; }
+
+/* Nhánh 5: Purple */
+.node-period-branch.branch-5 {
+    fill: #9b59b6;
+    stroke: #8e44ad;
+}
+.node-sub.branch-5 { stroke: #9b59b6; }
+.node-event.branch-5 { stroke: #9b59b6; }
+.link.branch-5, .link-sub.branch-5, .link-event.branch-5 { stroke: #9b59b6; }
+
+/* Nhánh 6: Orange */
+.node-period-branch.branch-6 {
+    fill: #e67e22;
+    stroke: #d35400;
+}
+.node-sub.branch-6 { stroke: #e67e22; }
+.node-event.branch-6 { stroke: #e67e22; }
+.link.branch-6, .link-sub.branch-6, .link-event.branch-6 { stroke: #e67e22; }
+
+
+/* Sub-nodes (Style nền chung) */
 .node-sub {
     fill: #ffffff;
     stroke-width: 2px;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
-.node-sub.period-1930 {
-    stroke: #e74c3c;
-}
-
-.node-sub.period-1945 {
-    stroke: #3498db;
-}
-
-.node-sub.period-1975 {
-    stroke: #2ecc71;
-}
-
-/* Sub-sub nodes (events) */
+/* Sub-sub nodes (events) (Style nền chung) */
 .node-event {
     fill: #f8f9fa;
     stroke-width: 1.5px;
     filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.08));
-}
-
-.node-event.period-1930 {
-    stroke: #e74c3c;
-}
-
-.node-event.period-1945 {
-    stroke: #3498db;
-}
-
-.node-event.period-1975 {
-    stroke: #2ecc71;
 }
 
 /* Node Text Styles */
@@ -116,52 +154,16 @@
     opacity: 0.8;
 }
 
-.link.period-1930 {
-    stroke: #e74c3c;
-}
-
-.link.period-1945 {
-    stroke: #3498db;
-}
-
-.link.period-1975 {
-    stroke: #2ecc71;
-}
-
 .link-sub {
     fill: none;
     stroke-width: 1.5px;
     opacity: 0.6;
 }
 
-.link-sub.period-1930 {
-    stroke: #e74c3c;
-}
-
-.link-sub.period-1945 {
-    stroke: #3498db;
-}
-
-.link-sub.period-1975 {
-    stroke: #2ecc71;
-}
-
 .link-event {
     fill: none;
     stroke-width: 1px;
     opacity: 0.5;
-}
-
-.link-event.period-1930 {
-    stroke: #e74c3c;
-}
-
-.link-event.period-1945 {
-    stroke: #3498db;
-}
-
-.link-event.period-1975 {
-    stroke: #2ecc71;
 }
 
 /* Interactive States */
