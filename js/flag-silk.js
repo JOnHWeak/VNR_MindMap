@@ -89,10 +89,10 @@
 
     // Material uniforms — tuned for dark red silk
     const uniforms = {
-      uSpeed: { value: 5.0 },
+      uSpeed: { value: 10.0 },
       uScale: { value: 1.0 },
       uNoiseIntensity: { value: 1.4 },
-      uColor: { value: new THREE.Color('#8d1010') }, // deep red
+      uColor: { value: new THREE.Color('#ad0000') }, // deep red
       uRotation: { value: 0.0 },
       uTime: { value: 0.0 }
     };
