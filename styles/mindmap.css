@@ -76,6 +76,69 @@
     stroke: #2ecc71;
 }
 
+/* Detail nodes */
+.node-detail {
+    fill: #fff8e1;
+    stroke-width: 1.5px;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.08));
+}
+
+.node-detail.period-1930 {
+    stroke: #e74c3c;
+}
+
+.node-detail.period-1945 {
+    stroke: #3498db;
+}
+
+.node-detail.period-1975 {
+    stroke: #2ecc71;
+}
+
+/* Detail item nodes */
+.node-detail-item {
+    fill: #f5f5f5;
+    stroke-width: 1px;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.05));
+}
+
+.node-detail-item.period-1930 {
+    stroke: #e74c3c;
+}
+
+.node-detail-item.period-1945 {
+    stroke: #3498db;
+}
+
+.node-detail-item.period-1975 {
+    stroke: #2ecc71;
+}
+
+/* Expandable/Collapsible indicator */
+.node.has-children {
+    cursor: pointer;
+}
+
+.node.has-children.collapsed::after {
+    content: '+';
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.node.has-children.expanded::after {
+    content: '−';
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: bold;
+    font-size: 14px;
+}
+
 /* Node Text Styles */
 .node-text {
     font-family: 'Inter', sans-serif;
@@ -83,7 +146,7 @@
     font-weight: 500;
     text-anchor: middle;
     dominant-baseline: central;
-    fill: #212529; /* Darker text for better contrast */
+    fill: #34495e; /* Dark slate blue for better readability */
     pointer-events: none;
 }
 
@@ -95,8 +158,8 @@
 
 .node-text.period {
     font-size: 14px;
-    font-weight: 600;
-    fill: white;
+    font-weight: 700; /* Bold text */
+    fill: #ffffff !important; /* White text for contrast, forced */
 }
 
 .node-text.sub {
@@ -106,6 +169,16 @@
 
 .node-text.event {
     font-size: 10px;
+    font-weight: 400;
+}
+
+.node-text.detail {
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.node-text.detail-item {
+    font-size: 9px;
     font-weight: 400;
 }
 
