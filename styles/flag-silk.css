@@ -1,0 +1,53 @@
+
+/* Fullscreen fixed background using WebGL (silk effect) + star overlay */
+html, body { background:#0a0a0a; } /* dark guard */
+.vn-flag-silk {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.vn-flag-silk canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* Keep app content above */
+body > *:not(.vn-flag-silk) {
+  position: relative;
+  z-index: 1;
+}
+
+/* SVG star overlay */
+.vn-flag-star {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 1;
+}
+.vn-flag-star svg {
+  width: min(36vmin, 520px);
+  height: auto;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.35));
+}
+
+/* Optional vignette for depth */
+.vn-flag-silk::after{
+  content:"";
+  position:absolute; inset:0;
+  pointer-events:none;
+  background: radial-gradient(140% 100% at 50% 40%,
+    rgba(0,0,0,0) 55%,
+    rgba(0,0,0,0.18) 100%);
+  mix-blend-mode: multiply;
+}
+
+/* Reduced motion: fallback to static gradient */
+@media (prefers-reduced-motion: reduce){
+  .vn-flag-silk[data-reduced="1"] canvas{ display:none; }
+  .vn-flag-silk{ background: linear-gradient(135deg,#6d0c0c 0%, #8d1010 40%, #3d0707 100%); }
+}
