@@ -1,0 +1,85 @@
+/* ===== Title Card trung tâm – chỉ 1 halo, 2 dòng ===== */
+
+.tilted-card-figure{
+    position:relative;
+    width:100%; height:100%;
+    perspective:900px;
+    display:flex; align-items:center; justify-content:center;
+    pointer-events:auto;
+  }
+  .tilted-card-inner{
+    position:relative;
+    transform-style:preserve-3d;
+    border-radius:14px;
+    overflow:hidden;
+    will-change:transform,box-shadow;
+    box-shadow:0 6px 20px rgba(0,0,0,.35);
+    background:transparent;
+    border:1px solid rgba(255,255,255,.18);
+    backdrop-filter:blur(2px);
+  }
+  /* Ảnh nền */
+  .tilted-card-bg{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:contain;
+    border-radius:14px;
+    filter:contrast(1.05) saturate(1.08);
+  }
+  /* overlay chiếm toàn bộ card để xoay nhẹ cùng tilt */
+  .tilted-card-overlay{
+    position:absolute; inset:0;
+    z-index:3; pointer-events:none;
+    transform:translateZ(30px);
+  }
+  
+  /* Tiêu đề: 2 dòng, đẩy lên vùng mây trắng */
+  .tilted-card-title{
+    position:absolute;
+    left:50%; top:2.5%;
+    transform:translateX(-50%);
+    max-width:92%;
+    text-align:center;
+    color:#c1121f;                 /* đỏ đậm */
+    font-weight:800;
+    letter-spacing:.3px;
+    line-height:1.12;
+    font-size:clamp(18px, 2.6vw, 26px);
+    white-space:normal; word-break:keep-all;
+    padding:2px 8px;               /* nhỏ – chỉ để halo ôm sát */
+    background:transparent;
+    text-shadow:0 0 3px rgba(255,255,255,.45), 0 0 8px rgba(255,255,255,.28);
+  }
+  
+  /* BỎ mọi lớp đệm phụ – KHÔNG dùng ::before nữa */
+  
+  /* Halo duy nhất: trái→phải khớp màu ảnh (xanh lá → vàng → trắng ấm) */
+  .tilted-card-title.two-lines::after{
+    content:"";
+    position:absolute;
+    inset:-12px -18px;
+    border-radius:22px;
+    z-index:-1; pointer-events:none;
+    background:linear-gradient(90deg,
+      #2c7a3b 0%,
+      #8ec641 35%,
+      #f5c542 70%,
+      #fff1d0 100%
+    );
+    filter:blur(14px) saturate(1.06);
+    opacity:.9;
+  }
+  
+  /* lớp phủ tối RẤT nhẹ toàn card để ảnh dịu (không tạo khung trắng) */
+  .tilted-card-inner::after{
+    content:"";
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.18));
+    border-radius:14px; pointer-events:none; z-index:2;
+  }
+  
+  @media (max-width:640px){
+    .tilted-card-title{ top:5%; font-size:16px; }
+    .tilted-card-title.two-lines::after{ filter:blur(12px); opacity:.85; }
+  }
+  
