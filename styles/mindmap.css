@@ -83,7 +83,7 @@
     font-weight: 500;
     text-anchor: middle;
     dominant-baseline: central;
-    fill: #333;
+    fill: #212529; /* Darker text for better contrast */
     pointer-events: none;
 }
 
@@ -112,6 +112,7 @@
 /* Links/Connections */
 .link {
     fill: none;
+    stroke: #adb5bd; /* Default link color */
     stroke-width: 2px;
     opacity: 0.8;
 }
