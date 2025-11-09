@@ -8,7 +8,7 @@ const CENTRAL_CARD = {
   rotateAmplitude: 12 // độ nghiêng tối đa (độ)
 };
 const CENTRAL_IMG_SRC = "assets/LSDCSVN.png";
-const CENTRAL_SIZE = { MIN_W: 320, MAX_W: 520, MIN_H: 72 }; // biên an toàn (kéo ngang hơn để hợp 2 dòng)
+const CENTRAL_SIZE = { MIN_W: 360, MAX_W: 560, MIN_H: 72 }; // biên an toàn (kéo ngang hơn để hợp 2 dòng)
 
 class VietnameseCommunistPartyMindmap {
   constructor(containerId, data) {
@@ -314,138 +314,92 @@ class VietnameseCommunistPartyMindmap {
     this.linkGroup = gEnter.merge(this.linkGroup);
   }
 
-  renderNodes() {
-    const nodes = this.root.descendants().filter((d) => d.data.id);
-    this.nodeGroup = this.g.selectAll(".node-group").data(nodes, (d) => d.data.id);
-
-    const enter = this.nodeGroup.enter().append("g")
-      .attr("class", "node-group")
-      .attr("transform", (d) => {
-        const p = this.pos.get(d.data.id);
-        return `translate(${p.y},${p.x})`;
-      })
+  renderNodes(){
+    const nodes=this.root.descendants().filter(d=>d.data.id);
+    this.nodeGroup=this.g.selectAll(".node-group").data(nodes, d=>d.data.id);
+    const enter=this.nodeGroup.enter().append("g")
+      .attr("class","node-group")
+      .attr("transform", d=>{ const p=this.pos.get(d.data.id); return `translate(${p.y},${p.x})`; })
       .call(this.dragHandler())
-      .style("opacity", 0);
+      .style("opacity",0);
 
-    const CFG = { width: CENTRAL_CARD.width, height: CENTRAL_CARD.height, scale: CENTRAL_CARD.scaleOnHover, amp: CENTRAL_CARD.rotateAmplitude };
-
-    // util: ép 2 dòng cân nhau
-    function toTwoLinesBalanced(s) {
+    // chia 2 dòng cân chữ (không cho tự quấn thành 3)
+    const toTwoLines = (s) => {
       const words = (s || "").trim().split(/\s+/);
-      if (words.length <= 2) return s;
-      const total = words.length;
-      // tìm điểm cắt sao cho 2 nửa gần nhau nhất về độ dài ký tự
-      let best = 1, minDiff = Infinity;
-      for (let i = 1; i < total; i++) {
-        const left = words.slice(0, i).join(" ").length;
-        const right = words.slice(i).join(" ").length;
-        const diff = Math.abs(left - right);
-        if (diff < minDiff) { minDiff = diff; best = i; }
+      if (words.length <= 2) return `<span>${s}</span>`; // 1 dòng vẫn OK
+      let best = 1, min = Infinity;
+      for (let i = 1; i < words.length; i++) {
+        const L = words.slice(0, i).join(" ").length;
+        const R = words.slice(i).join(" ").length;
+        const d = Math.abs(L - R);
+        if (d < min) { min = d; best = i; }
       }
-      return `${words.slice(0, best).join(" ")}<br>${words.slice(best).join(" ")}`;
-    }
+      const l1 = words.slice(0, best).join(" ");
+      const l2 = words.slice(best).join(" ");
+      return `<span class="l1">${l1}</span><br/><span class="l2">${l2}</span>`;
+    };
 
-    enter.each((d, i, nodesArr) => {
-      const g = d3.select(nodesArr[i]);
+    enter.each((d, i, arr)=>{
+      const g=d3.select(arr[i]);
+      if(d.data.type==="central"){
+        const w=CENTRAL_CARD.width, h=CENTRAL_CARD.height;
+        const fo=g.append("foreignObject")
+          .attr("x",-w/2).attr("y",-h/2).attr("width",w).attr("height",h)
+          .style("overflow","visible");
 
-      if (d.data.type === "central") {
-        // foreignObject để nhúng HTML
-        const fo = g.append("foreignObject")
-          .attr("x", -CFG.width / 2)
-          .attr("y", -CFG.height / 2)
-          .attr("width", CFG.width)
-          .attr("height", CFG.height)
-          .style("overflow", "visible");
+        const root=fo.append("xhtml:div").attr("class","tilted-card-figure")
+          .style("width",`${w}px`).style("height",`${h}px`);
+        const inner=root.append("div").attr("class","tilted-card-inner")
+          .style("width",`${w}px`).style("height",`${h}px`);
 
-        const div = fo.append("xhtml:div")
-          .attr("class", "tilted-card-figure")
-          .style("width", CFG.width + "px")
-          .style("height", CFG.height + "px");
+        inner.append("img").attr("class","tilted-card-bg").attr("src",CENTRAL_IMG_SRC).attr("alt","Lịch sử ĐCSVN");
 
-        const inner = div.append("div")
-          .attr("class", "tilted-card-inner")
-          .style("width", CFG.width + "px")
-          .style("height", CFG.height + "px");
+        inner.append("div").attr("class","tilted-card-overlay")
+          .append("div").attr("class","tilted-card-title two-lines")
+          .html(toTwoLines(d.data.name || "Lịch sử Đảng Cộng sản Việt Nam"));
 
-        // Ảnh nền
-        inner.append("img")
-          .attr("class", "tilted-card-bg")
-          .attr("src", CENTRAL_IMG_SRC)
-          .attr("alt", "Lịch sử ĐCSVN");
-
-        // Tiêu đề 2 dòng duy nhất
-        inner.append("div")
-          .attr("class", "tilted-card-overlay")
-          .append("div")
-          .attr("class", "tilted-card-title two-lines")
-          .html(toTwoLinesBalanced(d.data.name || "Lịch sử Đảng Cộng sản Việt Nam"));
-
-        // Tilt (bỏ trên mobile)
-        let lastY = 0;
-        const amp = CFG.amp;
-        const scaleH = CFG.scale;
-        const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-
-        function handleMove(ev) {
-          const rect = ev.currentTarget.getBoundingClientRect();
-          const cx = rect.left + rect.width / 2;
-          const cy = rect.top + rect.height / 2;
-          const offsetX = ev.clientX - cx;
-          const offsetY = ev.clientY - cy;
-
-          const rX = -(offsetY / (rect.height / 2)) * amp;
-          const rY = (offsetX / (rect.width / 2)) * amp;
-
-          ev.currentTarget.style.transform =
-            `rotateX(${rX}deg) rotateY(${rY}deg) scale(${scaleH})`;
-
-          const vY = offsetY - lastY;
-          const overlay = ev.currentTarget.querySelector(".tilted-card-overlay");
-          if (overlay) overlay.style.transform = `translateZ(30px) rotate(${(-vY * 0.6)}deg)`;
-          lastY = offsetY;
+        // tilt (tắt trên mobile)
+        const isTouch=("ontouchstart" in window)||navigator.maxTouchPoints>0;
+        if(!isTouch){
+          let lastY=0, amp=CENTRAL_CARD.rotateAmplitude, scale=CENTRAL_CARD.scaleOnHover;
+          function move(ev){
+            const r=ev.currentTarget.getBoundingClientRect();
+            const cx=r.left+r.width/2, cy=r.top+r.height/2;
+            const ox=ev.clientX-cx, oy=ev.clientY-cy;
+            const rx=-(oy/(r.height/2))*amp, ry=(ox/(r.width/2))*amp;
+            ev.currentTarget.style.transform=`rotateX(${rx}deg) rotateY(${ry}deg) scale(${scale})`;
+            const vY=oy-lastY;
+            const ov=ev.currentTarget.querySelector(".tilted-card-overlay");
+            if(ov) ov.style.transform=`translateZ(30px) rotate(${(-vY*0.6)}deg)`;
+            lastY=oy;
+          }
+          function enter(ev){ ev.currentTarget.style.transition="transform 120ms ease"; ev.currentTarget.style.transform=`scale(${scale})`; }
+          function leave(ev){ ev.currentTarget.style.transition="transform 200ms ease"; ev.currentTarget.style.transform="rotateX(0deg) rotateY(0deg) scale(1)"; const ov=ev.currentTarget.querySelector(".tilted-card-overlay"); if(ov) ov.style.transform="translateZ(30px) rotate(0deg)"; }
+          inner.on("mousemove",move).on("mouseenter",enter).on("mouseleave",leave);
         }
-
-        function handleEnter(ev) {
-          ev.currentTarget.style.transition = "transform 120ms ease";
-          ev.currentTarget.style.transform = `scale(${scaleH})`;
-        }
-        function handleLeave(ev) {
-          ev.currentTarget.style.transition = "transform 200ms ease";
-          ev.currentTarget.style.transform = "rotateX(0deg) rotateY(0deg) scale(1)";
-          const overlay = ev.currentTarget.querySelector(".tilted-card-overlay");
-          if (overlay) overlay.style.transform = "translateZ(30px) rotate(0deg)";
-        }
-
-        if (!isTouch) {
-          inner.on("mousemove", (ev) => handleMove(ev))
-               .on("mouseenter", (ev) => handleEnter(ev))
-               .on("mouseleave", (ev) => handleLeave(ev));
-        }
-
       } else {
-        // ==== các node còn lại (rect + text) ====
         g.append("rect")
-          .attr("class", (d) => `node ${this.getNodeClass(d)}`)
-          .attr("width", (d) => this.getNodeWidth(d))
-          .attr("height", (d) => this.getNodeHeight(d))
-          .attr("x", (d) => -this.getNodeWidth(d) / 2)
-          .attr("y", (d) => -this.getNodeHeight(d) / 2)
-          .attr("rx", 10).attr("ry", 10)
-          .on("click", (e, d) => this.handleNodeClick(e, d))
-          .on("mouseover", (e, d) => this.showTooltip(e, d))
-          .on("mouseout", () => this.hideTooltip());
+          .attr("class", d=>`node ${this.getNodeClass(d)}`)
+          .attr("width", d=>this.getNodeWidth(d))
+          .attr("height", d=>this.getNodeHeight(d))
+          .attr("x", d=>-this.getNodeWidth(d)/2)
+          .attr("y", d=>-this.getNodeHeight(d)/2)
+          .attr("rx",10).attr("ry",10)
+          .on("click",(e,d)=>this.handleNodeClick(e,d))
+          .on("mouseover",(e,d)=>this.showTooltip(e,d))
+          .on("mouseout",()=>this.hideTooltip());
 
         g.append("text")
-          .attr("class", (d) => `node-text ${d.data.type}`)
-          .attr("dy", "0.35em")
-          .text((d) => this.getNodeText(d))
-          .style("font-size", (d) => this.getTextSize(d))
-          .style("pointer-events", "none")
-          .style("text-anchor", "middle");
+          .attr("class", d=>`node-text ${d.data.type}`)
+          .attr("dy","0.35em")
+          .text(d=>this.getNodeText(d))
+          .style("font-size", d=>this.getTextSize(d))
+          .style("pointer-events","none")
+          .style("text-anchor","middle");
       }
     });
 
-    this.nodeGroup = enter.merge(this.nodeGroup);
+    this.nodeGroup=enter.merge(this.nodeGroup);
   }
 
   /* -------------------- DRAG -------------------- */
