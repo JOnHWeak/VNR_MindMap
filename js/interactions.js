@@ -148,12 +148,17 @@ class MindmapInteractions {
                     }
                     break;
 
-                case '1':
-                case '2':
+                case '1': // Tắt phím 1
+                case '2': // Tắt phím 2
+                    if (event.ctrlKey || event.metaKey) {
+                        event.preventDefault();
+                        // this.togglePeriodFilter(event.key); // Bỏ
+                    }
+                    break;
                 case '3':
                     if (event.ctrlKey || event.metaKey) {
                         event.preventDefault();
-                        this.togglePeriodFilter(event.key);
+                        this.togglePeriodFilter(event.key); // Giữ phím 3
                     }
                     break;
             }
@@ -162,9 +167,9 @@ class MindmapInteractions {
 
     togglePeriodFilter(key) {
         const periodMap = {
-            '1': '1930-1945',
-            '2': '1945-1975',
-            '3': '1975-2018'
+            // '1': '1930-1945', // Bỏ
+            // '2': '1945-1975', // Bỏ
+            '3': '1975-nay' // Giữ (vì data-period vẫn là 1975-nay)
         };
         
         const period = periodMap[key];

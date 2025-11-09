@@ -50,8 +50,8 @@ class VietnamCommunistPartyHistoryApp {
             await this.animations.hideLoadingScreen();
 
             // Load additional data if needed
-            await this.loadAdditionalData();
-
+            // await this.loadAdditionalData(); // BỎ: Không cần load thêm data
+ 
             // Initialize mindmap
             await this.initializeMindmap();
 
@@ -81,20 +81,21 @@ class VietnamCommunistPartyHistoryApp {
             setTimeout(() => {
                 // Here you could load additional period data
                 // For now, we'll extend the main data with additional periods
-                this.extendMindmapData();
+                // this.extendMindmapData(); // BỎ
                 resolve();
-            }, 1000);
+            }, 1000); // Giữ delay để loading mượt
         });
     }
 
     extendMindmapData() {
-        // Check if data objects exist before pushing
-        if (typeof periodData1945_1975 !== 'undefined' && typeof periodData1975_2018 !== 'undefined') {
-            // Add the period data from data.js to the main mindmap data
-            mindmapData.children.push(periodData1945_1975, periodData1975_2018);
-        } else {
-            console.error('Period data is not defined. Make sure data.js is loaded correctly.');
-        }
+        // BỎ HOÀN TOÀN HÀM NÀY
+        // // Check if data objects exist before pushing
+        // if (typeof periodData1945_1975 !== 'undefined' && typeof periodData1975_2018 !== 'undefined') {
+        //     // Add the period data from data.js to the main mindmap data
+        //     mindmapData.children.push(periodData1945_1975, periodData1975_2018);
+        // } else {
+        //     console.error('Period data is not defined. Make sure data.js is loaded correctly.');
+        // }
     }
 
     async initializeMindmap() {
