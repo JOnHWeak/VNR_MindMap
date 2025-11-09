@@ -390,6 +390,7 @@ class VietnameseCommunistPartyMindmap {
           .attr("y", d=>-this.getNodeHeight(d)/2)
           .attr("rx",10).attr("ry",10)
           .on("click",(e,d)=>this.handleNodeClick(e,d))
+          .on("dblclick", (e) => e.stopPropagation()) // Prevent zoom on double click
           .on("mouseover",(e,d)=>this.showTooltip(e,d))
           .on("mouseout",()=>this.hideTooltip());
 
