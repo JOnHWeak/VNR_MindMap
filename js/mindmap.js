@@ -122,6 +122,13 @@ class VietnameseCommunistPartyMindmap {
         const nb = (b.data.title || b.data.name || "") + "";
         return na.localeCompare(nb, "vi");
       });
+    } else {
+      for (const n of depth2Nodes) {
+        const topPeriod = this.getTopPeriodNode(n);
+        const is1975 = topPeriod && (this.periodStartYear(topPeriod) ?? 0) >= 1975;
+        const gapForThis = is1975 ? within1975Gap : baseGrandGap;
+        spreadChildrenAdaptive(n, n.x, gapForThis);
+      }
     }
 
     tree(L); // layout gốc
@@ -144,7 +151,9 @@ class VietnameseCommunistPartyMindmap {
       });
 
       const maxH = d3.max(kids, (k) => k._h || 30) || 30;
-      const gap = explicitGap ?? Math.max(baseGap, maxH + 28);
+      const gapBase = Math.max(baseGap, maxH + 28);
+      const gap = (explicitGap != null) ? Math.max(explicitGap, gapBase) : gapBase;
+    
       const n = kids.length;
       const start = -(n - 1) / 2;
       for (let i = 0; i < n; i++) kids[i].x = anchorY + (start + i) * gap;
@@ -232,6 +241,18 @@ class VietnameseCommunistPartyMindmap {
     }
 
     // ---- chống va chạm trong từng nhóm con cùng cha ----
+    const deep1975Parents = L.descendants().filter((d) => {
+      if (!d.children || !d.children.length) return false;
+      if (d.depth < 3) return false; // chỉ xử lý các nhánh sâu để tách lá
+      const topPeriod = this.getTopPeriodNode(d);
+      return topPeriod && (this.periodStartYear(topPeriod) ?? 0) >= 1975;
+    });
+
+    const leafGap1975 = 54; // có thể tăng 60–70 nếu muốn dãn hơn
+    for (const p of deep1975Parents) {
+      spreadChildrenAdaptive(p, p.x, leafGap1975);
+    }
+
     const padY = 10;
     const groupsByParent = d3.group(L.descendants().filter(d => d.parent), d => d.parent.data.id);
     for (const [, kids] of groupsByParent) {
@@ -250,6 +271,53 @@ class VietnameseCommunistPartyMindmap {
     }
 
     // ---- tính khoảng cách NGANG tuyệt đối (né dính theo bề rộng) ----
+    if (p1975Node) {
+      const branchLevel2 = (p1975Node.children || []).filter(
+        (b) => b.depth === 2 && b.children && b.children.length
+      );
+      const subtreePad = 18; // khoảng cách giữa 2 cụm con
+
+      for (const branch of branchLevel2) {
+        const subroots = (branch.children || []).filter(
+          (c) => c.children && c.children.length
+        );
+        if (subroots.length <= 1) continue;
+
+        // sắp xếp từ trên xuống dưới theo vị trí hiện tại
+        subroots.sort((a, b) => a.x - b.x);
+        let cursor = -Infinity;
+
+        for (const sr of subroots) {
+          const nodes = sr.descendants();
+          let top = Infinity;
+          let bottom = -Infinity;
+
+          // tính biên trên/dưới của cả cụm
+          for (const node of nodes) {
+            const half = (node._h || 30) / 2;
+            const t = node.x - half;
+            const btm = node.x + half;
+            if (t < top) top = t;
+            if (btm > bottom) bottom = btm;
+          }
+
+          if (cursor === -Infinity) {
+            cursor = bottom;
+            continue;
+          }
+
+          const minTop = cursor + subtreePad;
+          if (top < minTop) {
+            const shift = minTop - top;
+            nodes.forEach((n) => { n.x += shift; });
+            top += shift;
+            bottom += shift;
+          }
+
+          cursor = bottom;
+        }
+      }
+    }
     const rootW = L._w || this.getNodeWidth(L);
     const depth1MinAbs = (p) => {
       const pw = p._w || 160;
