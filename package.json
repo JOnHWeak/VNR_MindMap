@@ -6,7 +6,7 @@
   "main": "index.html",
   "scripts": {
     "dev": "live-server --port=3000 --open=/index.html",
-    "start": "live-server --port=8080 --open=/main.html",
+    "start": "node js/server.js",
     "build": "npm run clean && npm run mkdirs && npm run copy-html && npm run minify",
     "clean": "rimraf dist",
     "mkdirs": "mkdirp dist/styles dist/js",
