@@ -33,13 +33,23 @@ function addMessage(sender, text) {
 }
 
 async function getAIResponse(text) {
-    const response = await fetch("/api/chat", { // Use relative path for production
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: text })
-  });
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
 
-  if (!response.ok) return "Lỗi: không thể kết nối server.";
-  const data = await response.json();
-  return data.reply;
+    const data = await response.json();
+
+    if (!response.ok) {
+      // Hiển thị lỗi chi tiết từ server nếu có
+      return data.reply || `Lỗi: Server phản hồi với mã ${response.status}`;
+    }
+
+    return data.reply;
+  } catch (error) {
+    console.error("Fetch error:", error);
+    return "Lỗi: Không thể gửi yêu cầu đến server.";
+  }
 }
