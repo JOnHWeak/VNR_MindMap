@@ -18,12 +18,16 @@ class VietnameseCommunistPartyMindmap {
     this.width = window.innerWidth;
     this.height = window.innerHeight - 60;
 
+    this.zoomBehavior = d3.zoom()
+        .scaleExtent([0.25, 3])
+        .on("zoom", (event) => this.handleZoom(event));
+
     this.svg = this.container
       .append("svg")
       .attr("id", "mindmap-svg")
       .attr("width", this.width)
       .attr("height", this.height)
-      .call(d3.zoom().scaleExtent([0.25, 3]).on("zoom", (e) => this.handleZoom(e)))
+      .call(this.zoomBehavior)
       .on("click", () => this.deselectAll());
 
     this.g = this.svg.append("g");
@@ -102,8 +106,8 @@ class VietnameseCommunistPartyMindmap {
     // 5. Fallback logic (from old code, will default to right)
     const anc = this.getTopPeriodNode(node); // getTopPeriodNode is still relevant
     const start = anc ? this.periodStartYear(anc) : null;
-    if (start != null) return start >= 1975 ? +1 : -1; 
-    
+    if (start != null) return start >= 1975 ? +1 : -1;
+
     const label = (anc?.data?.title || anc?.data?.name || anc?.data?.period || "").toLowerCase();
     if (label.includes("1975")) return +1;
 
@@ -140,9 +144,9 @@ class VietnameseCommunistPartyMindmap {
         const nb = (b.data.name || "") + "";
         return na.localeCompare(nb, "vi");
       });
-    } 
+    }
     // SỬA LỖI: Xóa khối 'else' bị lỗi ở đây
-    
+
 
     tree(L); // layout gốc
 
@@ -154,7 +158,7 @@ class VietnameseCommunistPartyMindmap {
     const spreadChildrenAdaptive = (parent, anchorY, baseGap, explicitGap) => {
       const kids = parent.children || [];
       if (!kids.length) { parent.x = anchorY; return; }
-    
+
       kids.sort((a, b) => {
         const oa = a.data.order ?? null, ob = b.data.order ?? null;
         if (oa != null && ob != null && oa !== ob) return oa - ob;
@@ -163,16 +167,16 @@ class VietnameseCommunistPartyMindmap {
         // Sửa: Luôn sắp xếp theo tên (NHÁNH 1, 2, 3...)
         return (a.data.name || "").localeCompare(b.data.name || "", "vi");
       });
-    
+
       const maxH = d3.max(kids, (k) => k._h || 30) || 30;
       const gapBase = Math.max(baseGap, maxH + 28);
       const gap = (explicitGap != null) ? Math.max(explicitGap, gapBase) : gapBase;
-    
+
       const n = kids.length;
       const start = -(n - 1) / 2;
       for (let i = 0; i < n; i++) kids[i].x = anchorY + (start + i) * gap;
       parent.x = d3.mean(kids, (k) => k.x); // cha đứng giữa
-    };    
+    };
 
     // ---- đặt anchor cho 6 giai đoạn ----
     const rootX0 = L.x;
@@ -186,16 +190,16 @@ class VietnameseCommunistPartyMindmap {
 
     const spreadSideChildren = (kids, anchorY, baseGap, explicitGap) => {
         if (!kids || !kids.length) return;
-    
+
         // Sắp xếp lại theo tên (đảm bảo)
         kids.sort((a, b) => {
           return (a.data.name || "").localeCompare(b.data.name || "", "vi");
         });
-    
+
         const maxH = d3.max(kids, (k) => k._h || 30) || 30;
         const gapBase = Math.max(baseGap, maxH + 28);
         const gap = (explicitGap != null) ? Math.max(explicitGap, gapBase) : gapBase;
-    
+
         const num = kids.length;
         const start = -(num - 1) / 2; // (e.g., 3 kids: -1, 0, 1)
         for (let i = 0; i < num; i++) kids[i].x = anchorY + (start + i) * gap;
@@ -203,7 +207,7 @@ class VietnameseCommunistPartyMindmap {
 
     const n = Math.max(leftPeriods.length, rightPeriods.length, 1); // Get max number of kids on one side (should be 3)
     const avail = (this.height - edgeTop - edgeBot);
-    
+
     // SỬA LỖI CHỒNG CHÉO:
     // Tăng mạnh khoảng cách tối thiểu (từ 140 -> 450) và bỏ giới hạn trên (220)
     const desiredGap = Math.max(450, avail / Math.max(2, n - 1)); // Tăng min gap, bỏ max cap
@@ -214,12 +218,12 @@ class VietnameseCommunistPartyMindmap {
     if (rightPeriods.length > 0) {
         spreadSideChildren(rightPeriods, rootX0, baseChildGap, desiredGap);
     }
-    
+
     // ---- Dàn đều các con (depth=2) của 6 nhánh chính ----
     const depth1Nodes = L.descendants().filter(
       (d) => d.depth === 1 && d.children && d.children.length
     );
-    
+
     // Khoảng cách dọc giữa các node "1.1", "1.2"
     const depth2NodeGap = 80; // Giữ 80 là đủ
 
@@ -228,13 +232,13 @@ class VietnameseCommunistPartyMindmap {
         // dùng chính vị trí .x của cha làm tâm
         spreadChildrenAdaptive(node, node.x, depth2NodeGap);
     }
-    
+
     // ---- Chống va chạm cho các node CÙNG CẤP (siblings) ----
     const padY = 10;
-    
+
     // Sửa lỗi logic: Chỉ áp dụng cho các node con (depth > 1)
     const groupsByParent = d3.group(L.descendants().filter(d => d.parent && d.depth > 1), d => d.parent.data.id);
-    
+
     for (const [, kids] of groupsByParent) {
       kids.sort((a, b) => a.x - b.x);
       let last = -Infinity;
@@ -429,12 +433,12 @@ class VietnameseCommunistPartyMindmap {
   /* -------------------- STYLE HELPERS -------------------- */
   getNodeClass(d) {
     const type = d.data.type;
-    
+
     // Gán class màu cho 6 nhánh chính
     if (d.depth === 1 && d.data.id) {
         return `node node-period-branch ${d.data.id}`; // e.g., "node-period-branch branch-1"
     }
-    
+
     let periodClass = "period-1975"; // Default
     if (d.data.period) {
       const startYear = parseInt(d.data.period.split("-")[0], 10);
@@ -442,7 +446,7 @@ class VietnameseCommunistPartyMindmap {
     }
 
     if (type === "central") return "node-central";
-    
+
     // Lấy ID nhánh cha
     let mainBranchId = "";
     let temp = d;
@@ -460,7 +464,7 @@ class VietnameseCommunistPartyMindmap {
   }
   getLinkClass(target) {
     const period = target.data.period ? target.data.period.split("-")[0] : "1975";
-    
+
     let mainBranchId = "";
     let temp = target;
     while (temp.depth > 1 && temp.parent) {
@@ -541,6 +545,18 @@ class VietnameseCommunistPartyMindmap {
     this.g.attr("transform", e.transform);
     const zl = document.getElementById("zoom-level");
     if (zl) zl.textContent = Math.round(e.transform.k * 100) + "%";
+  }
+
+  zoomIn() {
+    this.svg.transition().duration(250).call(this.zoomBehavior.scaleBy, 1.2);
+  }
+
+  zoomOut() {
+    this.svg.transition().duration(250).call(this.zoomBehavior.scaleBy, 0.8);
+  }
+
+  resetView() {
+    this.svg.transition().duration(300).call(this.zoomBehavior.transform, d3.zoomIdentity);
   }
   resize() {
     this.width = window.innerWidth;

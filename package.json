@@ -2,6 +2,7 @@
   "name": "vnr-mindmap",
   "version": "1.0.0",
   "description": "Interactive mindmap for Vietnamese Communist Party History",
+  "type": "module",
   "main": "index.html",
   "scripts": {
     "dev": "live-server --port=3000 --open=/index.html",
@@ -32,25 +33,29 @@
   "author": "VNR Mindmap Team",
   "license": "MIT",
   "devDependencies": {
-    "live-server": "^1.2.2",
-    "http-server": "^14.1.1",
     "clean-css-cli": "^5.6.2",
-    "uglify-js": "^3.17.4",
-    "eslint": "^8.50.0",
-    "prettier": "^3.0.3",
     "cpx": "^1.5.0",
-    "npm-run-all": "^4.1.5",
-    "rimraf": "^5.0.5",
+    "eslint": "^8.50.0",
+    "http-server": "^14.1.1",
+    "live-server": "^1.2.2",
     "mkdirp": "^3.0.1",
-    "replace-in-file": "^7.1.0"
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.0.3",
+    "replace-in-file": "^7.1.0",
+    "rimraf": "^5.0.5",
+    "uglify-js": "^3.17.4"
   },
-  "dependencies": {},
   "repository": {
     "type": "git",
-    "url": "https://github.com/vnr-team/mindmap.git"
+    "url": "git+https://github.com/vnr-team/mindmap.git"
   },
   "bugs": {
     "url": "https://github.com/vnr-team/mindmap/issues"
   },
-  "homepage": "https://vnr-team.github.io/mindmap"
+  "homepage": "https://vnr-team.github.io/mindmap",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "node-fetch": "^3.3.2"
+  }
 }
