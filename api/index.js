@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+﻿import fetch from 'node-fetch';
 
 // This is the Vercel Serverless Function handler
 export default async function handler(req, res) {
@@ -27,13 +27,12 @@ export default async function handler(req, res) {
 
   try {
     const apiResponse = await fetch(
-      `https://generativelangua
-      ge.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: `Bạn là một chuyên gia ${TOPIC}. Trả lời câu hỏi sau một cách ngắn gọn và chính xác: ${userMessage}` }] }],
+          contents: [{ parts: [{ text: Bạn là một chuyên gia . Trả lời câu hỏi sau một cách ngắn gọn và chính xác:  }] }],
         }),
       }
     );
@@ -42,7 +41,7 @@ export default async function handler(req, res) {
 
     if (!apiResponse.ok || data.error) {
       console.error("Gemini API Error:", data.error?.message || 'Unknown error');
-      return res.status(500).json({ reply: `Lỗi từ API: ${data.error?.message || 'Không rõ lỗi'}` });
+      return res.status(500).json({ reply: Lỗi từ API:  });
     }
 
     const reply =
