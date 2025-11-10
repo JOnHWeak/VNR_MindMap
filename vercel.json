@@ -4,16 +4,24 @@
     {
       "src": "js/server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "**/*",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "js/server.js"
+      "src": "/api/chat",
+      "dest": "/js/server.js"
     },
     {
-      "src": "/(.*)",
-      "dest": "js/server.js"
+      "src": "/main",
+      "dest": "/main.html"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
     }
   ]
 }

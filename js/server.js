@@ -1,12 +1,9 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-// Recreate __dirname for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import express from 'express';
+import fetch from 'node-fetch';
+import cors from 'cors';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -14,16 +11,16 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// --- Static File Serving ---
-const rootDir = path.join(__dirname, '..');
-app.use(express.static(rootDir));
-
 // --- API Route for Chatbot ---
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyC689uk9Yh_irsnAMxTw8LEFUKztth3Go4";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const TOPIC = "trong ngành Lịch sử Đảng Cộng sản Việt Nam, không nói về bất kì lĩnh vực khác cũng như không đúng chủ đề";
 
 app.post("/api/chat", async (req, res) => {
   const userMessage = req.body.message;
+
+  if (!GEMINI_API_KEY) {
+    return res.status(500).json({ reply: "Lỗi: API key chưa được cấu hình trên server." });
+  }
 
   if (!userMessage) {
     return res.status(400).json({ reply: "Tin nhắn không được để trống." });
@@ -58,16 +55,11 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-// --- Serve HTML files ---
-app.get('/', (req, res) => {
-    res.sendFile(path.join(rootDir, 'index.html'));
-});
-
-app.get('/main', (req, res) => {
-    res.sendFile(path.join(rootDir, 'main.html'));
-});
-
 // --- Start Server ---
+// Vercel will ignore this when deploying, but it's good for local testing
 app.listen(port, () => {
   console.log(`✅ Server is running on port ${port}`);
 });
+
+// Export the app for Vercel's serverless environment
+export default app;
