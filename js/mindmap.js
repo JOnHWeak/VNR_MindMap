@@ -363,9 +363,9 @@ class VietnameseCommunistPartyMindmap {
 
         inner.append("img").attr("class","tilted-card-bg").attr("src",CENTRAL_IMG_SRC).attr("alt","Lịch sử ĐCSVN");
 
-        inner.append("div").attr("class","tilted-card-overlay")
-          .append("div").attr("class","tilted-card-title two-lines")
-          .html(toTwoLines(d.data.name || "Lịch sử Đảng Cộng sản Việt Nam"));
+        // inner.append("div").attr("class","tilted-card-overlay")
+        //   .append("div").attr("class","tilted-card-title two-lines")
+        //   .html(toTwoLines(d.data.name || "Lịch sử Đảng Cộng sản Việt Nam"));
 
         // tilt (tắt trên mobile)
         const isTouch=("ontouchstart" in window)||navigator.maxTouchPoints>0;
