@@ -33,7 +33,7 @@ function addMessage(sender, text) {
 }
 
 async function getAIResponse(text) {
-  const response = await fetch("http://127.0.0.1:3001/chat", { // Gọi tới server của bạn
+    const response = await fetch("/api/chat", { // Use relative path for production
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message: text })
