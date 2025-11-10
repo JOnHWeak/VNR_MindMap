@@ -1,6 +1,9 @@
-{
+﻿{
   "rewrites": [
     { "source": "/api/chat", "destination": "/api/index.js" },
     { "source": "/main", "destination": "/main.html" }
+  ],
+  "builds": [
+    { "src": "api/index.js", "use": "@vercel/node" }
   ]
 }
